@@ -1,5 +1,6 @@
 const Plugin = module.parent.require('../Structures/Plugin');
 const EventEmitter = require('eventemitter3');
+const $ = require("jquery");
 
 class AFunc extends Plugin {
     constructor(...args) {
@@ -61,18 +62,22 @@ class AFWatcher extends EventEmitter {
         this.emit('mutation', rec);
         rec.addedNodes.forEach(n => {
             if(n.classList && n.classList.contains('popout')){
-                if(n.childNodes[0].classList.contains('userPopout-4pfA0d')) this.emit('userPopout', window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1][1].props.user);
+                if(n.childNodes[0].classList.contains('userPopout-4pfA0d')) this.emit('userPopout', {
+                    user: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1][1].props.user : null,
+                    guild: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1][1].props.guild : null,
+                    userId: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[2][1].props.userId
+                });
                 if(n.childNodes[0].classList.contains('rtc-connection-popout')) this.emit('rtcConnection');
                 if(n.childNodes[0].classList.contains('autocomplete-popout')) this.emit('autoCompletePopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-user-filter-popout')) this.emit('auditLogsUserFilterPopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-action-filter-popout')) this.emit('auditLogsActionFilterPopout');
+            }
             if(n.classList && n.classList.contains('modal-2LIEKY')){
                 if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode)._currentElement.props.children[0].props.user);
                 if(n.childNodes[0].childNodes[0].classList.contains('modal-image')) this.emit('imageModal', n.childNodes[0].childNodes[0].childNodes[0].src);
                 if(n.childNodes[0].classList.contains('region-select-modal')) this.emit('regionSelectModal');
                 if(n.childNodes[0].classList.contains('create-guild-container')) this.emit('guildModal');
                 if(n.childNodes[0].classList.contains('quickswitcher-container')) this.emit('quickSwitcher');
-            }
             }
         });
     }
