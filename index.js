@@ -232,7 +232,9 @@ class AFuncClass {
         this.unbindTooltip();
         function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "normal"} ${options && options.className ? options.className : ""}` }
         if(!['top','bottom','left','right'].includes(direction)) throw new Error("Invalid direction!");
-        if(options && options.style && !['error','success','warning'].includes(options.style)) throw new Error("Invalid style!");
+        if(typeof options !== 'object') options = {style:'normal',sanitize:true};
+        if(options && typeof options.sanitize !== 'boolean') options.sanitize = true;
+        if(options && options.style && !['error','success','warning','normal'].includes(options.style)) throw new Error("Invalid style!");
         this.dom._afuncProperties.tooltip_mw = ()=>{
             let tt = this.dom._afuncProperties.tooltip;
             if(!this.dom._afuncProperties.tooltip_up) return;
@@ -260,7 +262,7 @@ class AFuncClass {
         this.dom._afuncProperties.tooltip_mh = ()=>{
             let tt = document.createElement("div");
             tt.className = getClassName(direction);
-            tt.innerHTML = text;
+            tt.innerHTML = options.sanitize ? window.DI.Helpers.sanitize(text) : text;
             this.dom._afuncProperties.tooltip = tt;
             document.querySelector(".tooltips").appendChild(this.dom._afuncProperties.tooltip);
             this.dom._afuncProperties.tooltip_up = true;
