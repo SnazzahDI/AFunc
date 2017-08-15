@@ -1,0 +1,11 @@
+{
+  "name": "AFunc",
+  "version": "1.0.0",
+  "description": "Replicate methods and listen to actions in Discord.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Snazzah",
+  "license": "MIT"
+}
