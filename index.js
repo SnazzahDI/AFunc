@@ -1,5 +1,6 @@
 const Plugin = module.parent.require('../Structures/Plugin');
 const EventEmitter = require('eventemitter3');
+const $ = require("jquery");
 
 class AFunc extends Plugin {
     constructor(...args) {
@@ -8,6 +9,8 @@ class AFunc extends Plugin {
         window.A.plugin = this;
         window.A.require = require;
         window.A.Watcher = new AFWatcher();
+        window.A.dialog = AFDialog;
+        window.A.class = AFuncClass;
         window.A.parseDom = (dom, pdom) => {
             if(dom && dom.constructor && dom.constructor.name === "jQuery"){
                 return dom[1]
@@ -83,6 +86,137 @@ class AFWatcher extends EventEmitter {
 
     log(...args) {
         console.log(`%c[AFunc] %c[MutationObserver]`, `color: #dac372; font-weight: bold;`, `font-weight: bold;`, ...args);
+    }
+}
+
+class AFDialog {
+    constructor(type, options) {
+        if(!['default'].includes(type)) type = 'default';
+        if(typeof options !== 'object') throw new Error('Options is required as an object!');
+        if(typeof options.title !== 'string') throw new Error('Title is required as an string!');
+        if(typeof options.content !== 'string') throw new Error('Content is required as an string!');
+        if(typeof options.sanitize !== 'boolean') options.sanitize = true;
+        options.buttons = this._parseButtons(options.buttons);
+        this.options = options;
+        this.type = type;
+    }
+
+    static get calloutBackdrop() {
+        let calloutBackdrop = document.createElement('div');
+        calloutBackdrop.className = "afunc-dom callout-backdrop";
+        return calloutBackdrop;
+    }
+
+    static get modalOuter() {
+        let modal = document.createElement('div');
+        modal.className = "afunc-dom modal-2LIEKY";
+        let inner = document.createElement('div');
+        inner.className = "inner-1_1f7b";
+        modal.appendChild(inner);
+        return modal;
+    }
+
+    static get closeButton() {
+        return window.A.plugin.parseHTML(`<svg class="close-3RZM3j flexChild-1KGW5q" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 12 12"><g fill="none" fill-rule="evenodd"><path d="M0 0h12v12H0"></path><path class="fill" fill="currentColor" d="M9.5 3.205L8.795 2.5 6 5.295 3.205 2.5l-.705.705L5.295 6 2.5 8.795l.705.705L6 6.705 8.795 9.5l.705-.705L6.705 6"></path></g></svg>`).childNodes[0];
+    }
+
+    static get modalWrapper() {
+        return document.querySelector('.nux-highlights+div+div')
+    }
+
+    _san(text){ return this.options.sanitize ? window.DI.Helpers.sanitize(text) : text; }
+
+    _parseButtons(nbtns){
+        let btns = nbtns;
+        if(!(nbtns instanceof Array)) btns = [nbtns];
+        return btns.map(btn => {
+            if(typeof btns !== 'object') return undefined;
+            if(typeof btn.text !== 'string') throw new Error('Button text is required as an string!');
+            if(!['default','outline'].includes(btn.style)) btn.style = 'default';
+            if(!['string','function'].includes(typeof btn.onClick)) btn.onClick = 'close';
+            if(typeof btn.onClick === 'string' && btn.onClick != 'close') throw new Error('Invalid button callback string!'); else btn.onClick = this.hide.bind(this);
+            return btn;
+        }).filter(b => typeof b !== 'undefined');
+    }
+
+    hide(){
+        if(!this.modal || !this.cbd) return;
+        let modal = this.modal;
+        let cbd = this.cbd;
+        modal.classList.add('afunc-off');
+        cbd.classList.add('afunc-off');
+        this.modal = null;
+        this.cbd = null;
+        setTimeout(()=>{
+            AFDialog.modalWrapper.removeChild(modal);
+            AFDialog.modalWrapper.removeChild(cbd);
+        }, 500);
+    }
+
+    show(){
+        let calloutBackdrop = AFDialog.calloutBackdrop;
+        calloutBackdrop.onclick = this.hide.bind(this);
+        let outer = AFDialog.modalOuter;
+        let modal = document.createElement('div');
+        outer.childNodes[0].appendChild(modal);
+        if(this.type === 'default'){
+            modal.className = "modal-3HOjGZ modal-KwRiOq size-2pbXxj";
+
+            let titleBlock = document.createElement('div');
+            titleBlock.className = "flex-lFgbSz flex-3B1Tl4 horizontal-2BEEBe horizontal-2VE-Fw flex-3B1Tl4 directionRow-yNbSvJ justifyStart-2yIZo0 alignCenter-3VxkQP noWrap-v6g9vO header-3sp3cE";
+            titleBlock.style = "flex: 0 0 auto;";
+            let title = document.createElement('h4');
+            title.className = "h4-2IXpeI title-1pmpPr size16-3IvaX_ height20-165WbF weightSemiBold-T8sxWH defaultColor-v22dK1 defaultMarginh4-jAopYe marginReset-3hwONl";
+            title.innerHTML = this._san(this.options.title);
+            titleBlock.appendChild(title);
+
+            let contentWrap = document.createElement('div');
+            contentWrap.className = "scrollerWrap-2uBjct content-1Cut5s scrollerThemed-19vinI themeGhostHairline-2H8SiW";
+            let contentScroller = document.createElement('div');
+            contentScroller.className = "scroller-fzNley inner-tqJwAU content-3KEfmo selectable";
+            let content = document.createElement('div');
+            content.className = "medium-2KnC-N size16-3IvaX_ height20-165WbF primary-2giqSn selectable-prgIYK";
+            content.style = "padding-bottom: 20px;";
+            content.innerHTML = this._san(this.options.content);
+            contentWrap.appendChild(contentScroller);
+            contentScroller.appendChild(content);
+
+            modal.appendChild(titleBlock);
+            modal.appendChild(contentWrap);
+
+            if(this.options.closeButton){
+                let closeButton = AFDialog.closeButton;
+                closeButton.onclick = this.hide.bind(this);
+                titleBlock.appendChild(closeButton);
+            }
+
+            if(this.options.buttons.length > 0){
+                let buttonBlock = document.createElement('div');
+                buttonBlock.className = "flex-lFgbSz flex-3B1Tl4 horizontalReverse-2LanvO horizontalReverse-k5PqxT flex-3B1Tl4 directionRowReverse-2eZTxP justifyStart-2yIZo0 alignStretch-1hwxMa noWrap-v6g9vO footer-1PYmcw";
+                buttonBlock.style = "flex: 0 0 auto;";
+                this.options.buttons.map(btn => {
+                    let button = document.createElement('button');
+                    button.style = "flex: 0 0 auto;";
+                    button.onclick = btn.onClick;
+                    let buttonInner = document.createElement('div');
+                    buttonInner.innerHTML = window.DI.Helpers.sanitize(btn.text);
+                    if(btn.style === 'default'){
+                        button.className = "buttonBrandFilledDefault-2Rs6u5 buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonBrandFilled-3Mv0Ra mediumGrow-uovsMu";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsFilled-3M8HCx contents-4L4hQM";
+                    }else if(btn.style === 'outline'){
+                        button.className = "buttonRedOutlinedDefault-1VCgwL buttonOutlinedDefault-3FNQnZ buttonDefault-2OLW-v button-2t3of8 buttonOutlined-38aLSW buttonRedOutlined-2t9fm_ smallGrow-2_7ZaC";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsOutlined-mJF6nQ contents-4L4hQM";
+                    }
+                    button.appendChild(buttonInner);
+                    buttonBlock.appendChild(button);
+                });
+                modal.appendChild(buttonBlock);
+            }
+        }
+        this.modal = outer;
+        this.cbd = calloutBackdrop;
+        AFDialog.modalWrapper.appendChild(calloutBackdrop);
+        AFDialog.modalWrapper.appendChild(outer);
     }
 }
 

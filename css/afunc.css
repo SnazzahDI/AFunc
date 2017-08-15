@@ -1,0 +1,27 @@
+.afunc-dom.callout-backdrop {opacity:0.85;background-color:rgb(0,0,0);transform:translateZ(0px);-webkit-animation:afunc-callout-backdrop .5s ease-in-out;animation:afunc-callout-backdrop .5s ease-in-out;}
+@-webkit-keyframes afunc-callout-backdrop {from {opacity:0;}}
+@keyframes afunc-callout-backdrop {from {opacity:0;}}
+.afunc-dom.afunc-off.callout-backdrop {-webkit-animation:afunc-callout-backdrop-off .5s ease-in-out;animation:afunc-callout-backdrop-off .5s ease-in-out;}
+@-webkit-keyframes afunc-callout-backdrop-off {100% {opacity:0;}}
+@keyframes afunc-callout-backdrop-off {100% {opacity:0;}}
+.afunc-dom.modal-2LIEKY {opacity:1;transform:scale(1) translateZ(0px);-webkit-animation:afunc-modal-2LIEKY .5s ease-in-out;animation:afunc-modal-2LIEKY .5s ease-in-out;}
+@-webkit-keyframes afunc-modal-2LIEKY {
+	from {opacity:0;transform:scale(0)}
+	100% {opacity:1;transform:scale(1)}
+}
+@keyframes afunc-modal-2LIEKY {
+	from {opacity:0;transform:scale(0)}
+	100% {opacity:1;transform:scale(1)}
+}
+.afunc-dom.afunc-off.modal-2LIEKY {-webkit-animation:afunc-modal-2LIEKY-off .5s ease-in-out;animation:afunc-modal-2LIEKY-off .5s ease-in-out;}
+@-webkit-keyframes afunc-modal-2LIEKY-off {
+	from {opacity:1;transform:scale(1)}
+	20% {transform:scale(1.2)}
+	100% {opacity:0;transform:scale(0)}
+}
+@keyframes afunc-modal-2LIEKY-off {
+	from {opacity:1;transform:scale(1)}
+	20% {transform:scale(1.2)}
+	100% {opacity:0;transform:scale(0)}
+}
+.afunc-dom.afunc-off.modal-2LIEKY .directionRowReverse-2eZTxP .button-2t3of8+.button-2t3of8 {margin-left:10px;}
