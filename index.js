@@ -73,6 +73,8 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].classList.contains('autocomplete-popout')) this.emit('autoCompletePopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-user-filter-popout')) this.emit('auditLogsUserFilterPopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-action-filter-popout')) this.emit('auditLogsActionFilterPopout');
+                if(n.childNodes[0].classList.contains('premium-payment-modal')) this.emit('nitroModal');
+                if(n.childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[1].childNodes[0].childNodes[0].childNodes[0].value);
             }
             if(n.classList && n.classList.contains('modal-2LIEKY')){
                 if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode)._currentElement.props.children[0].props.user);
@@ -94,7 +96,8 @@ class AFDialog {
         if(!['default'].includes(type)) type = 'default';
         if(typeof options !== 'object') throw new Error('Options is required as an object!');
         if(typeof options.title !== 'string') throw new Error('Title is required as an string!');
-        if(typeof options.content !== 'string') throw new Error('Content is required as an string!');
+        if(![typeof options.content === 'string', options.content instanceof HTMLElement, options.content instanceof Array].includes(true)) throw new Error('Content is required as either a string, element or an array of elements!');
+        if(options.content instanceof Array && options.content.map(e => e instanceof HTMLElement).includes(false)) throw new Error('Content is required as either a string, element or an array of elements!');
         if(typeof options.sanitize !== 'boolean') options.sanitize = true;
         options.buttons = this._parseButtons(options.buttons);
         this.options = options;
@@ -177,7 +180,13 @@ class AFDialog {
             let content = document.createElement('div');
             content.className = "medium-2KnC-N size16-3IvaX_ height20-165WbF primary-2giqSn selectable-prgIYK";
             content.style = "padding-bottom: 20px;";
-            content.innerHTML = this._san(this.options.content);
+            if(typeof this.options.content === 'string'){
+                content.innerHTML = this._san(this.options.content);
+            }else if(this.options.content instanceof HTMLElement){
+                content.appendChild(this.options.content);
+            }else{
+                this.options.content.map(e => content.appendChild(e));
+            }
             contentWrap.appendChild(contentScroller);
             contentScroller.appendChild(content);
 
