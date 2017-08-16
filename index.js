@@ -227,6 +227,7 @@ class AFDialog {
         this.cbd = calloutBackdrop;
         AFDialog.modalWrapper.appendChild(calloutBackdrop);
         AFDialog.modalWrapper.appendChild(outer);
+        return modal;
     }
 }
 
