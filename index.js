@@ -5,10 +5,12 @@ const $ = require("jquery");
 class AFunc extends Plugin {
     constructor(...args) {
         super(...args);
+        if(window.A && window.A.Watcher) this.pausedEvents = window.A.Watcher._events;
         window.A = (a,b)=>new AFuncClass(a,b);
         window.A.plugin = this;
         window.A.require = require;
         window.A.Watcher = new AFWatcher();
+        if(this.pausedEvents) window.A.Watcher._events = this.pausedEvents;
         window.A.dialog = AFDialog;
         window.A.class = AFuncClass;
         window.A.parseDom = (dom, pdom) => {
@@ -24,7 +26,6 @@ class AFunc extends Plugin {
 
     unload(){
         window.A.Watcher.mo.disconnect();
-        delete window.A;
     }
 
     get configTemplate() {
