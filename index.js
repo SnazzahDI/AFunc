@@ -177,6 +177,35 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
+                }else if(inst._currentElement.props.children.props
+                        && inst._currentElement.props.children.props.children
+                        && inst._currentElement.props.children.props.children[0]
+                        && inst._currentElement.props.children.props.children[0].props.label
+                        && inst._currentElement.props.children.props.children[0].props.image){
+                    this.emit('contextMenu', {
+                        type: 'react',
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[0]
+                        && inst._currentElement.props.children[0].key
+                        && inst._currentElement.props.children[0].props.label
+                        && inst._currentElement.props.children[0].props.styles){
+                    this.emit('contextMenu', {
+                        type: 'roles',
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children.props
+                        && inst._currentElement.props.children.props.children
+                        && inst._currentElement.props.children.props.children[0]
+                        && inst._currentElement.props.children.props.children[0].key
+                        && inst._currentElement.props.children.props.children[0].props.label){
+                    this.emit('contextMenu', {
+                        type: 'inviteServer',
+                        instance: inst,
+                        element: n
+                    });
                 }else{
                     this.emit('contextMenu', {
                         type: 'unknown',
@@ -226,7 +255,7 @@ class AFDialog {
     }
 
     static get modalWrapper() {
-        return document.querySelector('.nux-highlights+div+div')
+        return document.querySelector('.nux-highlights+div+div');
     }
 
     _san(text){ return this.options.sanitize ? window.DI.Helpers.sanitize(text) : text; }
@@ -333,8 +362,9 @@ class AFDialog {
     }
 }
 
-class AFContextMenu {
+class AFContextMenu extends EventEmitter {
     constructor() {
+        super();
         this.items = [];
     }
 
@@ -348,7 +378,7 @@ class AFContextMenu {
     }
 
     static get contextWrapper() {
-        return document.querySelector('.nux-highlights+div')
+        return document.querySelector('.nux-highlights+div');
     }
 
     static fromArray(items) {
@@ -364,18 +394,64 @@ class AFContextMenu {
 
     _parseItem(item){
         if(typeof item !== 'object') throw new Error('Item is not an object!');
+        if(item.image && typeof item.image !== 'string') throw new Error('Image needs to be a string!');
         if(typeof item.text !== 'string') throw new Error('Item text is required as a string!');
         if(typeof item.onClick !== 'function') throw new Error('On click is required as a function!');
+        if(item.onHover && typeof item.onHover !== 'function') throw new Error('On hover needs to be a function!');
+        if(item.onHoverOut && typeof item.onHoverOut !== 'function') throw new Error('On hover out needs to be a function!');
+        if(item.subMenuItems && !(item.subMenuItems instanceof Array)) throw new Error('Sub menu items out needs to be an array!');
         if(typeof item.danger !== 'boolean') item.danger = false;
         if(typeof item.sanitize !== 'boolean') item.sanitize = true;
         return item;
     }
 
+    _hookToParentMenu(item, parentctx){
+        let childHideBind = this.hide.bind(this);
+        let childHovering = false;
+        let childHover = e => {
+            if(this.childHovering) return;
+            console.log('ch');
+            this.appendToElement(e.target, e.target.classList.contains('invertX'), e.target.classList.contains('invertY'));
+            this.childHovering = true;
+        };
+        let childHoverOut = e => {
+            console.log('cho', e.toElement.parentNode);
+            if(!this.childHovering || e.toElement.parentNode.parentNode === this.ctx) return;
+            this.hide();
+            this.childHovering = false;
+        };
+        let childContextHoverOut = e => {
+            console.log('ccho');
+            if(!this.childHovering || e.toElement === item) return;
+            this.hide();
+            this.childHovering = false;
+        };
+        parentctx.once('hide', childHideBind);
+        item.addEventListener('mouseenter', childHover);
+        item.addEventListener('mouseleave', childHoverOut);
+        this.on('build', e => e.addEventListener('mouseleave', childContextHoverOut));
+        // .item-subMenu
+    }
+
     _toDom(i){
         let item = document.createElement("div");
-        item.className = `item${i.danger ? " danger" : ""}`;
-        item.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
+        console.log(i);
+        item.className = `item${i.danger ? " danger" : ""}${i.image ? " item-image" : ""}${i.subMenuItems ? " item-subMenu" : ""}`;
+        if(i.image){
+            let label = document.createElement("div");
+            label.className = 'label';
+            label.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
+            let img = document.createElement("img");
+            img.src = i.image;
+            item.appendChild(label);
+            item.appendChild(img);
+        }else{
+            item.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
+        }
+        if(i.subMenuItems) AFContextMenu.fromArray(i.subMenuItems)._hookToParentMenu(item, this);
         item.onclick = i.onClick;
+        item.onmouseenter = i.onHover;
+        item.onmouseleave = i.onHoverOut;
         return item;
     }
 
@@ -391,10 +467,11 @@ class AFContextMenu {
 
     hide(){
         if(!this.ctx) return;
+        this.emit('hide');
         let ctx = this.ctx;
         this.ctx = null;
         AFContextMenu.contextWrapper.removeChild(ctx);
-        document.removeEventListener('click', this.hideBind);
+        document.querySelector(".app").removeEventListener('click', this.hideBind);
         this.hideBind = null;
     }
 
@@ -403,6 +480,7 @@ class AFContextMenu {
         let ctxi = ctx.childNodes[0];
         this.items.map(i => {
             if(i instanceof Array){
+                i = i[0];
                 let group = document.createElement("div");
                 group.className = 'item-group';
                 i.map(ii => group.appendChild(this._toDom(ii)));
@@ -412,7 +490,8 @@ class AFContextMenu {
         AFContextMenu.contextWrapper.appendChild(ctx);
         this.ctx = ctx;
         this.hideBind = this.hide.bind(this);
-        document.addEventListener('click', this.hideBind);
+        this.emit('build', ctx);
+        document.querySelector(".app").addEventListener('click', this.hideBind);
         return ctx;
     }
 
@@ -434,6 +513,25 @@ class AFContextMenu {
         };
         if(invertX) newpos.left -= ctxi.getBoundingClientRect().width;
         if(invertY) newpos.top -= ctxi.getBoundingClientRect().height*1.3; else newpos.top -= ctxi.getBoundingClientRect().height*.3;
+        ctx.style = `z-index: 1001; visibility: visible; left: ${newpos.left}px; top: ${newpos.top}px; transform: translateX(-50%) translateY(0%) translateZ(0px);`;
+        return ctx.childNodes[0];
+    }
+
+    appendToElement(e, invertX, invertY){
+        this.hide();
+        let ctx = this._build();
+        let ctxi = ctx.childNodes[0];
+        let position = e.getBoundingClientRect();
+        if(typeof invertX !== 'boolean') invertX = window.innerWidth < ctxi.getBoundingClientRect().width+position.width;
+        if(typeof invertY !== 'boolean') invertY = window.innerHeight/2 < position.height;
+        if(invertX) ctxi.classList.add('invertX');
+        if(invertY) ctxi.classList.add('invertY');
+        let newpos = {
+            top: position.top,
+            left: position.left
+        };
+        if(invertX) newpos.left -= ctxi.getBoundingClientRect().width+position.width; else newpos.left += ctxi.getBoundingClientRect().width;
+        if(invertY) newpos.top -= ctxi.getBoundingClientRect().height; else newpos.top -= ctxi.getBoundingClientRect().height/2;
         ctx.style = `z-index: 1001; visibility: visible; left: ${newpos.left}px; top: ${newpos.top}px; transform: translateX(-50%) translateY(0%) translateZ(0px);`;
         return ctx.childNodes[0];
     }
