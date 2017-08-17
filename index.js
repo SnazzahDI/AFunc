@@ -96,7 +96,7 @@ class AFDialog {
     constructor(type, options) {
         if(!['default'].includes(type)) type = 'default';
         if(typeof options !== 'object') throw new Error('Options is required as an object!');
-        if(typeof options.title !== 'string') throw new Error('Title is required as an string!');
+        if(typeof options.title !== 'string') throw new Error('Title is required as a string!');
         if(![typeof options.content === 'string', options.content instanceof HTMLElement, options.content instanceof Array].includes(true)) throw new Error('Content is required as either a string, element or an array of elements!');
         if(options.content instanceof Array && options.content.map(e => e instanceof HTMLElement).includes(false)) throw new Error('Content is required as either a string, element or an array of elements!');
         if(typeof options.sanitize !== 'boolean') options.sanitize = true;
@@ -135,7 +135,7 @@ class AFDialog {
         if(!(nbtns instanceof Array)) btns = [nbtns];
         return btns.map(btn => {
             if(typeof btns !== 'object') return undefined;
-            if(typeof btn.text !== 'string') throw new Error('Button text is required as an string!');
+            if(typeof btn.text !== 'string') throw new Error('Button text is required as a string!');
             if(!['default','outline'].includes(btn.style)) btn.style = 'default';
             if(!['string','function'].includes(typeof btn.onClick)) btn.onClick = 'close';
             if(typeof btn.onClick === 'string' && btn.onClick != 'close') throw new Error('Invalid button callback string!'); else btn.onClick = this.hide.bind(this);
@@ -158,6 +158,7 @@ class AFDialog {
     }
 
     show(){
+        if(this.modal) return this.modal.childNodes[0].childNodes[0];
         let calloutBackdrop = AFDialog.calloutBackdrop;
         calloutBackdrop.onclick = this.hide.bind(this);
         let outer = AFDialog.modalOuter;
