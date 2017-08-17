@@ -410,18 +410,15 @@ class AFContextMenu extends EventEmitter {
         let childHovering = false;
         let childHover = e => {
             if(this.childHovering) return;
-            console.log('ch');
             this.appendToElement(e.target, e.target.classList.contains('invertX'), e.target.classList.contains('invertY'));
             this.childHovering = true;
         };
         let childHoverOut = e => {
-            console.log('cho', e.toElement.parentNode);
             if(!this.childHovering || e.toElement.parentNode.parentNode === this.ctx) return;
             this.hide();
             this.childHovering = false;
         };
         let childContextHoverOut = e => {
-            console.log('ccho');
             if(!this.childHovering || e.toElement === item) return;
             this.hide();
             this.childHovering = false;
