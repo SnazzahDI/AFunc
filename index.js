@@ -19,6 +19,17 @@ class AFunc extends Plugin {
                 return dom[1]
             }else if(typeof dom === 'string') return (pdom ? pdom : document).querySelector(dom); else return dom;
         }
+        window.A.listParents = e => {
+            let list = [];
+            let iterate = parent => {
+                if(parent !== null && parent.parentNode !== null){
+                    list.push(parent.parentNode);
+                    iterate(parent.parentNode);
+                }
+            }
+            iterate(e);
+            return list;
+        }
     }
 
     parseHTML(html) {
@@ -206,6 +217,15 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
+                }else if(inst._currentElement.props.children.props
+                        && inst._currentElement.props.children.props.src){
+                    this.emit('contextMenu', {
+                        type: 'image',
+                        url: inst._currentElement.props.children.props.href,
+                        proxyUrl: inst._currentElement.props.children.props.src,
+                        instance: inst,
+                        element: n
+                    });
                 }else{
                     this.emit('contextMenu', {
                         type: 'unknown',
@@ -366,6 +386,8 @@ class AFContextMenu extends EventEmitter {
     constructor() {
         super();
         this.items = [];
+        this.child = null;
+        this.parent = null;
     }
 
     static get contextOuter() {
@@ -373,6 +395,7 @@ class AFContextMenu extends EventEmitter {
         popout.className = "popout popout-bottom no-arrow no-shadow";
         let ctx = document.createElement('div');
         ctx.className = "context-menu afunc-dom";
+        ctx.classList.add(document.querySelector('.app').classList[2]);
         popout.appendChild(ctx);
         return popout;
     }
@@ -401,39 +424,89 @@ class AFContextMenu extends EventEmitter {
         if(item.onHoverOut && typeof item.onHoverOut !== 'function') throw new Error('On hover out needs to be a function!');
         if(item.subMenuItems && !(item.subMenuItems instanceof Array)) throw new Error('Sub menu items out needs to be an array!');
         if(typeof item.danger !== 'boolean') item.danger = false;
+        if(typeof item.disabled !== 'boolean') item.disabled = false;
         if(typeof item.sanitize !== 'boolean') item.sanitize = true;
         return item;
     }
 
+    _listCtxParents(ctx){
+        let list = [];
+        let iterate = parent => {
+            if(parent !== null && parent._afuncCtxParent !== undefined){
+                list.push(parent._afuncCtxParent);
+                iterate(parent._afuncCtxParent);
+            }
+        }
+        iterate(ctx);
+        return list;
+    }
+
+    _listParents(ctx){
+        let list = [];
+        let iterate = parent => {
+            if(parent !== null && parent.parent !== null){
+                list.push(parent.parent);
+                iterate(parent.parent);
+            }
+        }
+        iterate(ctx);
+        return list;
+    }
+
+    _listCtxChildren(ctx){
+        let list = [];
+        let iterate = parent => {
+            if(parent !== null && parent.child !== null){
+                list.push(parent.child);
+                iterate(parent.child);
+            }
+        }
+        iterate(ctx);
+        return list;
+    }
+
     _hookToParentMenu(item, parentctx){
-        let childHideBind = this.hide.bind(this);
+        this.parent = parentctx;
+        parentctx.child = this;
+        let childHideBind = () => {
+            this.hide();
+            parentctx.child = null;
+        };
         let childHovering = false;
+        let dontHandle = false;
         let childHover = e => {
             if(this.childHovering) return;
-            this.appendToElement(e.target, e.target.classList.contains('invertX'), e.target.classList.contains('invertY'));
+            this.appendToElement(e.target);
             this.childHovering = true;
         };
         let childHoverOut = e => {
-            if(!this.childHovering || e.toElement.parentNode.parentNode === this.ctx) return;
+            if(!this.childHovering || e.toElement && e.toElement.parentNode && e.toElement.parentNode.parentNode
+                && e.toElement.parentNode.parentNode === this.ctx) return;
             this.hide();
             this.childHovering = false;
         };
         let childContextHoverOut = e => {
-            if(!this.childHovering || e.toElement === item) return;
+            if(e.toElement && e.toElement.parentNode && e.toElement.parentNode.parentNode && !e.toElement.parentNode.parentNode._afuncCtxClass) this._listParents(this).map(c => {if(c.parent) c.hide();});
+                else if(e.toElement && e.toElement.parentNode && e.toElement.parentNode.parentNode && this._listCtxChildren(e.toElement.parentNode.parentNode._afuncCtxClass).length > 0) this._listCtxChildren(e.toElement.parentNode.parentNode._afuncCtxClass).reverse().map(c=>c.hide());
+            if(!this.childHovering || e.toElement === item || e.toElement && e.toElement.parentNode && e.toElement.parentNode.parentNode
+                && (e.toElement.parentNode.parentNode === this.ctx || this._listCtxParents(e.toElement.parentNode.parentNode).includes(this.ctx))) return;
             this.hide();
             this.childHovering = false;
         };
         parentctx.once('hide', childHideBind);
         item.addEventListener('mouseenter', childHover);
         item.addEventListener('mouseleave', childHoverOut);
-        this.on('build', e => e.addEventListener('mouseleave', childContextHoverOut));
-        // .item-subMenu
+        this.on('build', e => {
+            e._afuncCtxParent = parentctx.ctx;
+            e._afuncCtxParentClass = parentctx;
+            e.addEventListener('mouseleave', childContextHoverOut)
+        });
     }
 
     _toDom(i){
         let item = document.createElement("div");
-        console.log(i);
-        item.className = `item${i.danger ? " danger" : ""}${i.image ? " item-image" : ""}${i.subMenuItems ? " item-subMenu" : ""}`;
+        //"<div class="checkbox-inner"><input type="checkbox" value="on"><span></span></div><span></span>"
+        item.className = `item${i.disabled ? " disabled" : ""}${i.danger ? " danger" : ""}${i.image ? " item-image" : ""}${i.subMenuItems ? " item-subMenu" : ""}`;
         if(i.image){
             let label = document.createElement("div");
             label.className = 'label';
@@ -446,9 +519,9 @@ class AFContextMenu extends EventEmitter {
             item.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
         }
         if(i.subMenuItems) AFContextMenu.fromArray(i.subMenuItems)._hookToParentMenu(item, this);
-        item.onclick = i.onClick;
-        item.onmouseenter = i.onHover;
-        item.onmouseleave = i.onHoverOut;
+        item.onclick = e => i.onClick(e, item);
+        item.onmouseenter = i.onHover ? e => i.onHover(e, item) : null;
+        item.onmouseleave = i.onHoverOut ? e => i.onHoverOut(e, item) : null;
         return item;
     }
 
@@ -484,10 +557,11 @@ class AFContextMenu extends EventEmitter {
                 ctxi.appendChild(group);
             }else ctxi.appendChild(this._toDom(i));
         });
+        this.emit('build', ctx);
         AFContextMenu.contextWrapper.appendChild(ctx);
+        ctx._afuncCtxClass = this;
         this.ctx = ctx;
         this.hideBind = this.hide.bind(this);
-        this.emit('build', ctx);
         document.querySelector(".app").addEventListener('click', this.hideBind);
         return ctx;
     }
@@ -509,7 +583,7 @@ class AFContextMenu extends EventEmitter {
             left: position.width
         };
         if(invertX) newpos.left -= ctxi.getBoundingClientRect().width;
-        if(invertY) newpos.top -= ctxi.getBoundingClientRect().height*1.3; else newpos.top -= ctxi.getBoundingClientRect().height*.3;
+        if(invertY) newpos.top -= ctxi.getBoundingClientRect().height; else newpos.top -= ctxi.getBoundingClientRect().height*.3;
         ctx.style = `z-index: 1001; visibility: visible; left: ${newpos.left}px; top: ${newpos.top}px; transform: translateX(-50%) translateY(0%) translateZ(0px);`;
         return ctx.childNodes[0];
     }
@@ -519,7 +593,7 @@ class AFContextMenu extends EventEmitter {
         let ctx = this._build();
         let ctxi = ctx.childNodes[0];
         let position = e.getBoundingClientRect();
-        if(typeof invertX !== 'boolean') invertX = window.innerWidth < ctxi.getBoundingClientRect().width+position.width;
+        if(typeof invertX !== 'boolean') invertX = window.innerWidth < ctxi.getBoundingClientRect().width+position.width+position.left;
         if(typeof invertY !== 'boolean') invertY = window.innerHeight/2 < position.height;
         if(invertX) ctxi.classList.add('invertX');
         if(invertY) ctxi.classList.add('invertY');
@@ -527,7 +601,7 @@ class AFContextMenu extends EventEmitter {
             top: position.top,
             left: position.left
         };
-        if(invertX) newpos.left -= ctxi.getBoundingClientRect().width+position.width; else newpos.left += ctxi.getBoundingClientRect().width;
+        if(invertX) newpos.left -= position.width; else newpos.left += ctxi.getBoundingClientRect().width;
         if(invertY) newpos.top -= ctxi.getBoundingClientRect().height; else newpos.top -= ctxi.getBoundingClientRect().height/2;
         ctx.style = `z-index: 1001; visibility: visible; left: ${newpos.left}px; top: ${newpos.top}px; transform: translateX(-50%) translateY(0%) translateZ(0px);`;
         return ctx.childNodes[0];
