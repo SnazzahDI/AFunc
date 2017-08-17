@@ -12,6 +12,7 @@ class AFunc extends Plugin {
         window.A.Watcher = new AFWatcher();
         if(this.pausedEvents) window.A.Watcher._events = this.pausedEvents;
         window.A.dialog = AFDialog;
+        window.A.contextMenu = AFContextMenu;
         window.A.class = AFuncClass;
         window.A.parseDom = (dom, pdom) => {
             if(dom && dom.constructor && dom.constructor.name === "jQuery"){
@@ -74,8 +75,8 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].classList.contains('autocomplete-popout')) this.emit('autoCompletePopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-user-filter-popout')) this.emit('auditLogsUserFilterPopout');
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-action-filter-popout')) this.emit('auditLogsActionFilterPopout');
-            }
-            if(n.classList && n.classList.contains('modal-2LIEKY')){
+                if(n.childNodes[0].classList.contains('context-menu') && !n.childNodes[0].classList.contains('afunc-dom')) this.emit('modalContextMenu');
+            }else if(n.classList && n.classList.contains('modal-2LIEKY')){
                 if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode)._currentElement.props.children[0].props.user);
                 if(n.childNodes[0].childNodes[0].classList.contains('modal-image')) this.emit('imageModal', n.childNodes[0].childNodes[0].childNodes[0].src);
                 if(n.childNodes[0].childNodes[0].classList.contains('region-select-modal')) this.emit('regionSelectModal');
@@ -83,6 +84,106 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].childNodes[0].classList.contains('quickswitcher-container')) this.emit('quickSwitcher');
                 if(n.childNodes[0].childNodes[0].classList.contains('premium-payment-modal')) this.emit('nitroModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[0][0].value);
+            }else if(n.classList && n.classList.contains('context-menu')){
+                let inst = window.DI.getReactInstance(n);
+                if(!inst) return;
+                if(inst._currentElement.props.children[1]
+                    && inst._currentElement.props.children[1].props.channel){
+                    this.emit('contextMenu', {
+                        type: 'channel',
+                        guild: inst._currentElement.props.children[1].props.guild,
+                        channel: inst._currentElement.props.children[1].props.channel,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[2]
+                        && inst._currentElement.props.children[2].props.guild){
+                    this.emit('contextMenu', {
+                        type: 'guild',
+                        guild: inst._currentElement.props.children[2].props.guild,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[3]
+                        && inst._currentElement.props.children[3].props.user){
+                    this.emit('contextMenu', {
+                        type: 'member',
+                        user: inst._currentElement.props.children[3].props.user,
+                        channelId: inst._currentElement.props.children[3].props.channelId,
+                        guildId: inst._currentElement.props.children[3].props.guildId,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[2]
+                        && inst._currentElement.props.children[2].props.user){
+                    this.emit('contextMenu', {
+                        type: 'member',
+                        user: inst._currentElement.props.children[2].props.user,
+                        channelId: inst._currentElement.props.children[2].props.channelId,
+                        guildId: inst._currentElement.props.children[2].props.guildId,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[2]
+                        && inst._currentElement.props.children[2].props.children
+                        && inst._currentElement.props.children[2].props.children[0]
+                        && inst._currentElement.props.children[2].props.children[0].props.message){
+                    this.emit('contextMenu', {
+                        type: 'message',
+                        channel: inst._currentElement.props.children[2].props.children[0].props.channel,
+                        message: inst._currentElement.props.children[2].props.children[0].props.message,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[3]
+                        && inst._currentElement.props.children[3].props.children
+                        && inst._currentElement.props.children[3].props.children[2]
+                        && inst._currentElement.props.children[3].props.children[2].props.user){
+                    this.emit('contextMenu', {
+                        type: 'groupMember',
+                        user: inst._currentElement.props.children[3].props.children[2].props.user,
+                        channelId: inst._currentElement.props.children[2].props.children.channelId,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[0]
+                        && inst._currentElement.props.children[0].props.children
+                        && inst._currentElement.props.children[0].props.children[2]
+                        && inst._currentElement.props.children[0].props.children[2].props.user){
+                    this.emit('contextMenu', {
+                        type: 'dm',
+                        user: inst._currentElement.props.children[0].props.children[2].props.user,
+                        channelId: inst._currentElement.props.children[0].props.children[2].props.channelId,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[0]
+                        && inst._currentElement.props.children[0].props.children
+                        && inst._currentElement.props.children[0].props.children[1]
+                        && inst._currentElement.props.children[0].props.children[1].props.channel){
+                    this.emit('contextMenu', {
+                        type: 'group',
+                        channel: inst._currentElement.props.children[0].props.children[1].props.channel,
+                        instance: inst,
+                        element: n
+                    });
+                }else if(inst._currentElement.props.children[1]
+                        && inst._currentElement.props.children[1].props.children
+                        && inst._currentElement.props.children[1].props.children[0]
+                        && inst._currentElement.props.children[1].props.children[0].props.user){
+                    this.emit('contextMenu', {
+                        type: 'user',
+                        user: inst._currentElement.props.children[1].props.children[0].props.user,
+                        instance: inst,
+                        element: n
+                    });
+                }else{
+                    this.emit('contextMenu', {
+                        type: 'unknown',
+                        instance: inst,
+                        element: n
+                    });
+                }
             }
         });
     }
@@ -232,11 +333,148 @@ class AFDialog {
     }
 }
 
+class AFContextMenu {
+    constructor() {
+        this.items = [];
+    }
+
+    static get contextOuter() {
+        let popout = document.createElement('div');
+        popout.className = "popout popout-bottom no-arrow no-shadow";
+        let ctx = document.createElement('div');
+        ctx.className = "context-menu afunc-dom";
+        popout.appendChild(ctx);
+        return popout;
+    }
+
+    static get contextWrapper() {
+        return document.querySelector('.nux-highlights+div')
+    }
+
+    static fromArray(items) {
+        if(!(items instanceof Array)) throw new Error('Items must be in a array!');
+        let ctx = new AFContextMenu();
+        items.map(i => {
+            if(i instanceof Array) ctx.addItemGroup(...i); else ctx.addItem(i);
+        });
+        return ctx;
+    }
+
+    _san(text){ return this.options.sanitize ? window.DI.Helpers.sanitize(text) : text; }
+
+    _parseItem(item){
+        if(typeof item !== 'object') throw new Error('Item is not an object!');
+        if(typeof item.text !== 'string') throw new Error('Item text is required as a string!');
+        if(typeof item.onClick !== 'function') throw new Error('On click is required as a function!');
+        if(typeof item.danger !== 'boolean') item.danger = false;
+        if(typeof item.sanitize !== 'boolean') item.sanitize = true;
+        return item;
+    }
+
+    _toDom(i){
+        let item = document.createElement("div");
+        item.className = `item${i.danger ? " danger" : ""}`;
+        item.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
+        item.onclick = i.onClick;
+        return item;
+    }
+
+    addItem(item){
+        this.items.push(this._parseItem(item));
+        return this;
+    }
+
+    addItemGroup(...items){
+        this.items.push([items.map(i => this._parseItem(i))]);
+        return this;
+    }
+
+    hide(){
+        if(!this.ctx) return;
+        let ctx = this.ctx;
+        this.ctx = null;
+        AFContextMenu.contextWrapper.removeChild(ctx);
+        document.removeEventListener('click', this.hideBind);
+        this.hideBind = null;
+    }
+
+    _build(){
+        let ctx = AFContextMenu.contextOuter;
+        let ctxi = ctx.childNodes[0];
+        this.items.map(i => {
+            if(i instanceof Array){
+                let group = document.createElement("div");
+                group.className = 'item-group';
+                i.map(ii => group.appendChild(this._toDom(ii)));
+                ctxi.appendChild(group);
+            }else ctxi.appendChild(this._toDom(i));
+        });
+        AFContextMenu.contextWrapper.appendChild(ctx);
+        this.ctx = ctx;
+        this.hideBind = this.hide.bind(this);
+        document.addEventListener('click', this.hideBind);
+        return ctx;
+    }
+
+    appendToMouseEvent(e){
+        this.hide();
+        let ctx = this._build();
+        let ctxi = ctx.childNodes[0];
+        let position = {
+            height: e.clientY,
+            width: e.clientX
+        };
+        let invertX = window.innerWidth < ctxi.getBoundingClientRect().width+position.width;
+        let invertY = window.innerHeight/2 < position.height;
+        if(invertX) ctxi.classList.add('invertX');
+        if(invertY) ctxi.classList.add('invertY');
+        let newpos = {
+            top: position.height,
+            left: position.width
+        };
+        if(invertX) newpos.left -= ctxi.getBoundingClientRect().width;
+        if(invertY) newpos.top -= ctxi.getBoundingClientRect().height*1.3; else newpos.top -= ctxi.getBoundingClientRect().height*.3;
+        ctx.style = `z-index: 1001; visibility: visible; left: ${newpos.left}px; top: ${newpos.top}px; transform: translateX(-50%) translateY(0%) translateZ(0px);`;
+        return ctx.childNodes[0];
+    }
+
+    appendToContextMenu(e = document.querySelector('.context-menu:not(.afunc-dom)')){
+        this.items.map(i => {
+            if(i instanceof Array){
+                i = i[0];
+                let group = document.createElement("div");
+                group.className = 'item-group';
+                i.map(ii => group.appendChild(this._toDom(ii)));
+                e.appendChild(group);
+                return group;
+            }else return e.appendChild(this._toDom(i));
+        });
+    }
+}
+
 class AFuncClass {
     constructor(obj, p) {
         this.pdom = window.A.parseDom(p);
         this.dom = window.A.parseDom(obj, this.pdom);
         if(this.dom && !this.dom._afuncProperties) this.dom._afuncProperties = {};
+    }
+
+    contextMenu(ctx){
+        if(!this.dom) throw new Error('No DOM found in the class!');
+        this.unbindContextMenu();
+        if(!(ctx instanceof AFContextMenu)) ctx = AFContextMenu.fromArray(ctx);
+        this.dom._afuncProperties.contextmenu_ctx = ctx;
+        this.dom._afuncProperties.contextmenu_bind = ctx.appendToMouseEvent.bind(ctx);
+        this.dom.addEventListener('contextmenu', this.dom._afuncProperties.contextmenu_bind);
+        return this;
+    }
+
+    unbindContextMenu(){
+        if(this.dom._afuncProperties.contextmenu_ctx) this.dom._afuncProperties.contextmenu_ctx.hide();
+        this.dom.removeEventListener('contextmenu', this.dom._afuncProperties.contextmenu_bind);
+        delete this.dom._afuncProperties.contextmenu_bind;
+        delete this.dom._afuncProperties.contextmenu_ctx;
+        return this;
     }
 
     tooltip(direction, text, options){
