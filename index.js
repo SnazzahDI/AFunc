@@ -1,6 +1,5 @@
 const Plugin = module.parent.require('../Structures/Plugin');
 const EventEmitter = require('eventemitter3');
-const $ = require("jquery");
 
 class AFunc extends Plugin {
     constructor(...args) {
