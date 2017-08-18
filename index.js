@@ -226,16 +226,14 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children.props
-                        && inst._currentElement.props.children.props.children
-                        && inst._currentElement.props.children.props.children[2]
-                        && inst._currentElement.props.children.props.children[2].props.children
-                        && inst._currentElement.props.children.props.children[2].props.children.props
-                        && inst._currentElement.props.children.props.children[2].props.children.props.channel){ // system messages
+                }else if(inst._currentElement.props.children[2]
+                        && inst._currentElement.props.children[2].props.children
+                        && inst._currentElement.props.children[2].props.children.props
+                        && inst._currentElement.props.children[2].props.children.props.channel){ // system messages
                     this.emit('contextMenu', {
                         type: 'systemMessage',
-                        channel: inst._currentElement.props.children.props.children[2].props.children.props.channel,
-                        message: inst._currentElement.props.children.props.children[2].props.children.props.message,
+                        channel: inst._currentElement.props.children[2].props.children.props.channel,
+                        message: inst._currentElement.props.children[2].props.children.props.message,
                         instance: inst,
                         element: n
                     });
