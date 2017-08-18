@@ -226,6 +226,18 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
+                }else if(inst._currentElement.props.children.props
+                        && inst._currentElement.props.children.props.children
+                        && inst._currentElement.props.children.props.children[2]
+                        && inst._currentElement.props.children.props.children[2].props.children
+                        && inst._currentElement.props.children.props.children[2].props.children.channel){ // system messages
+                    this.emit('contextMenu', {
+                        type: 'message',
+                        channel: inst._currentElement.props.children.props.children[2].props.children.channel,
+                        message: inst._currentElement.props.children.props.children[2].props.children.message,
+                        instance: inst,
+                        element: n
+                    });
                 }else{
                     this.emit('contextMenu', {
                         type: 'unknown',
@@ -418,8 +430,10 @@ class AFContextMenu extends EventEmitter {
     _parseItem(item){
         if(typeof item !== 'object') throw new Error('Item is not an object!');
         if(item.image && typeof item.image !== 'string') throw new Error('Image needs to be a string!');
+        if(item.image && item.hint) throw new Error('Image and hint are mutually exlusive!');
         if(typeof item.text !== 'string') throw new Error('Item text is required as a string!');
         if(typeof item.onClick !== 'function') throw new Error('On click is required as a function!');
+        if(item.hint && typeof item.hint !== 'string') throw new Error('Hint needs to be a string!');
         if(item.onHover && typeof item.onHover !== 'function') throw new Error('On hover needs to be a function!');
         if(item.onHoverOut && typeof item.onHoverOut !== 'function') throw new Error('On hover out needs to be a function!');
         if(item.subMenuItems && !(item.subMenuItems instanceof Array)) throw new Error('Sub menu items out needs to be an array!');
@@ -515,13 +529,21 @@ class AFContextMenu extends EventEmitter {
             img.src = i.image;
             item.appendChild(label);
             item.appendChild(img);
+        }else if(i.hint){
+            let span = document.createElement("span");
+            span.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
+            let hint = document.createElement("div");
+            hint.className = 'hint';
+            hint.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.hint) : i.hint;
+            item.appendChild(span);
+            item.appendChild(hint);
         }else{
             item.innerHTML = i.sanitize ? window.DI.Helpers.sanitize(i.text) : i.text;
         }
         if(i.subMenuItems) AFContextMenu.fromArray(i.subMenuItems)._hookToParentMenu(item, this);
-        item.onclick = e => i.onClick(e, item);
-        item.onmouseenter = i.onHover ? e => i.onHover(e, item) : null;
-        item.onmouseleave = i.onHoverOut ? e => i.onHoverOut(e, item) : null;
+        item.onclick = e => i.onClick(e, this, item);
+        item.onmouseenter = i.onHover ? e => i.onHover(e, this, item) : null;
+        item.onmouseleave = i.onHoverOut ? e => i.onHoverOut(e, this, item) : null;
         return item;
     }
 
