@@ -55,7 +55,7 @@ class AFWatcher extends EventEmitter {
     }
 
     _checkForOptions() {
-        if(($(".app>*:first-child")[0].childNodes.length === 2) !== this.inSettings){
+        if((document.querySelector(".app>*:first-child").childNodes.length === 2) !== this.inSettings){
             if(this.inSettings){
                 this.emit('settingsExit');
                 this.settingsType = null;
@@ -65,9 +65,9 @@ class AFWatcher extends EventEmitter {
             }
             this.inSettings = !this.inSettings;
         };
-        if($(".item-3879bf.selected-eNoxEK").html() !== this.currentTab && this.inSettings){
-            this.emit('settingsTab', $(".item-3879bf.selected-eNoxEK").html());
-            this.currentTab = $(".item-3879bf.selected-eNoxEK").html();
+        if(document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML !== this.currentTab && this.inSettings){
+            this.emit('settingsTab', document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML);
+            this.currentTab = document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML;
         }
     }
 
