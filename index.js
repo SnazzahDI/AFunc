@@ -65,7 +65,7 @@ class AFWatcher extends EventEmitter {
             }
             this.inSettings = !this.inSettings;
         };
-        if(document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML !== this.currentTab && this.inSettings){
+        if(document.querySelector(".item-3879bf.selected-eNoxEK") && document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML !== this.currentTab && this.inSettings){
             this.emit('settingsTab', document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML);
             this.currentTab = document.querySelector(".item-3879bf.selected-eNoxEK").innerHTML;
         }
