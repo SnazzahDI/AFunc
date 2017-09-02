@@ -124,12 +124,15 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[0][0].value);
             }else if(n.classList && n.classList.contains('message-group')){
                 let inst = window.DI.getReactInstance(n);
-                this.emit('messageGroup', {
-                    channel: inst._currentElement.props.children[1].props.children[0][0].props.channel,
-                    message: inst._currentElement.props.children[1].props.children[0][0].props.message,
+                let res = {
                     instance: inst,
                     element: n
-                });
+                };
+                if(inst._currentElement.props.children[1]) Object.assign(res, {
+                    channel: inst._currentElement.props.children[1].props.children[0][0].props.channel,
+                    message: inst._currentElement.props.children[1].props.children[0][0].props.message
+                })
+                this.emit('messageGroup', res);
             }else if(n.classList && n.classList.contains('context-menu')){
                 let inst = window.DI.getReactInstance(n);
                 if(!inst) return;
