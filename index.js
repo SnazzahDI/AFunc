@@ -29,6 +29,34 @@ class AFunc extends Plugin {
             iterate(e);
             return list;
         }
+        window.A.games = {
+            getRunning: () => {
+                let games = [];
+                for (let x in JSON.parse(window.DI.localStorage.RunningGameStore).gameOverrides) {
+                    let game = JSON.parse(window.DI.localStorage.RunningGameStore).gameOverrides[x]
+                    if (game.pid) {
+                        games.push(game);
+                    }
+                };
+                return games;
+            },
+            getOverrides: () => {
+                let games = [];
+                for (let x in JSON.parse(window.DI.localStorage.RunningGameStore).gameOverrides) {
+                    let game = JSON.parse(window.DI.localStorage.RunningGameStore).gameOverrides[x]
+                    if (game.pid) {
+                        games.push(game);
+                    }
+                };
+                return games;
+            },
+            getSeen: () => {
+                return JSON.parse(window.DI.localStorage.RunningGameStore).gamesSeen;
+            },
+            getOverlayEnabled: () => {
+                return JSON.parse(window.DI.localStorage.RunningGameStore).enableOverlay;
+            }
+        }
     }
 
     parseHTML(html) {
@@ -94,6 +122,14 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].childNodes[0].classList.contains('quickswitcher-container')) this.emit('quickSwitcher');
                 if(n.childNodes[0].childNodes[0].classList.contains('premium-payment-modal')) this.emit('nitroModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[0][0].value);
+            }else if(n.classList && n.classList.contains('message-group')){
+                let inst = window.DI.getReactInstance(n);
+                this.emit('messageGroup', {
+                    channel: inst._currentElement.props.children[1].props.children[0][0].props.channel,
+                    message: inst._currentElement.props.children[1].props.children[0][0].props.message,
+                    instance: inst,
+                    element: n
+                });
             }else if(n.classList && n.classList.contains('context-menu')){
                 let inst = window.DI.getReactInstance(n);
                 if(!inst) return;
