@@ -708,11 +708,11 @@ class AFuncClass {
     tooltip(direction, text, options){
         if(!this.dom) throw new Error('No DOM found in the class!');
         this.unbindTooltip();
-        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "normal"} ${options && options.className ? options.className : ""}` }
+        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "brand"} ${options && options.className ? options.className : ""}` }
         if(!['top','bottom','left','right'].includes(direction)) throw new Error("Invalid direction!");
         if(typeof options !== 'object') options = {style:'normal',sanitize:true};
         if(options && typeof options.sanitize !== 'boolean') options.sanitize = true;
-        if(options && options.style && !['error','success','warning','normal'].includes(options.style)) throw new Error("Invalid style!");
+        if(options && options.style && !['error','success','warning','brand'].includes(options.style)) throw new Error("Invalid style!");
         this.dom._afuncProperties.tooltip_mw = ()=>{
             let tt = this.dom._afuncProperties.tooltip;
             if(!this.dom._afuncProperties.tooltip_up) return;
