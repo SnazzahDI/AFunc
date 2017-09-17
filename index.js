@@ -6,19 +6,287 @@ class AFunc extends Plugin {
         super(...args);
         if(window.A && window.A.Watcher) this.pausedEvents = window.A.Watcher._events;
         window.A = (a,b)=>new AFuncClass(a,b);
-        window.A.plugin = this;
-        window.A.require = require;
-        window.A.Watcher = new AFWatcher();
-        if(this.pausedEvents) window.A.Watcher._events = this.pausedEvents;
-        window.A.dialog = AFDialog;
-        window.A.contextMenu = AFContextMenu;
-        window.A.class = AFuncClass;
-        window.A.parseDom = (dom, pdom) => {
+        const A = window.A;
+
+        A.plugin = this;
+        A.require = require;
+        A.Watcher = new AFWatcher();
+        A.Controller = new AFDiscordController();
+        if(this.pausedEvents) A.Watcher._events = this.pausedEvents;
+        A.dialog = AFDialog;
+        A.contextMenu = AFContextMenu;
+        A.class = AFuncClass;
+        A.clientMods = [];
+        A.clientTranslations = [];
+        A.clientPackages = [];
+        A.Constants = {
+            Classes: {},
+            KeyCodes: {},
+            ErrorCodes: {},
+            Translations: []
+        };
+
+        this.loadClientMods((m, e, r) => {
+            for (const key in r.c) {
+                let mod = r.c[key];
+                A.clientMods.push(mod);
+
+                if (mod.exports.hasOwnProperty('A11Y_NITRO_BADGE')) {
+                    A.Constants.Translations.push(mod.exports);
+                }
+
+                if (mod.exports.hasOwnProperty('version')) {
+                    A.clientPackages.push(mod.exports);
+                }
+
+                if (mod.i === 379) {
+                    A.Controller.loadMod('zoom', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('zoomTo')) {
+                    A.Controller.loadMod('zoom2', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('GUILD_NSFW_AGREE')) {
+                    A.Controller.loadMod('guildNSFW', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('FRIENDS_SET_SECTION')) {
+                    A.Controller.loadMod('friends', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('GUILD_SELECT')) {
+                    A.Controller.loadMod('account', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('CALL_CREATE')) {
+                    A.Controller.loadMod('call', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('KEYBINDS_ENABLE_ALL_KEYBINDS')) {
+                    A.Controller.loadMod('keybind', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('LOCAL_ACTIVITY_UPDATE')) {
+                    A.Controller.loadMod('misc', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('NEW_USER_FLOW_ACCOUNT_UPDATE')) {
+                    A.Controller.loadMod('userFlow', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('RTC_DEBUG_MODAL_SET_SECTION')) {
+                    A.Controller.loadMod('rtcModal', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('USER_REQUIRED_ACTION_UPDATE')) {
+                    A.Controller.loadMod('misc2', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('WINDOW_FOCUS')) {
+                    A.Controller.loadMod('misc3', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('INSTANT_INVITE_CREATE')) {
+                    A.Controller.loadMod('instantInvite', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('NOTICE_SHOW')) {
+                    A.Controller.loadMod('notice', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('CHANNEL_DELETE')) {
+                    A.Controller.loadMod('createDelete', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('QUICKSWITCHER_SEARCH')) {
+                    A.Controller.loadMod('quickswitcher', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('TUTORIAL_INDICATOR_SUPPRESS_ALL')) {
+                    A.Controller.loadMod('tutorial', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('USER_SETTINGS_MODAL_SUBMIT')) {
+                    A.Controller.loadMod('userSettings', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_actionHandlers') && mod.exports._actionHandlers.hasOwnProperty('RPC_APP_CONNECTED')) {
+                    A.Controller.loadMod('rpc', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('isSafeRedirect')) {
+                    A.Controller.loadMod('redirector', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('canReportInChannel')) {
+                    A.Controller.loadMod('reportChecker', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('upperCaseFirstChar')) {
+                    A.Controller.loadMod('util1', mod.exports);
+                }
+
+                if (mod.exports.hasOwnProperty('showChangelog')) {
+                    A.Controller.loadMod('changelog', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('fetchEmoji')) {
+                    A.Controller.loadMod('emoji', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('addKeybind')) {
+                    A.Controller.loadMod('keybind2', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('supportsFeature')) {
+                    A.Controller.loadMod('main', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('getActionType')) {
+                    A.Controller.loadMod('auditlogs', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('generateContentFilterOptions')) {
+                    A.Controller.loadMod('securityoptions', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('filterHasAnswer')) {
+                    A.Controller.loadMod('util2', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('camelCase')) {
+                    A.Controller.loadMod('util3', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('binstring2buf')) {
+                    A.Controller.loadMod('util4', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('decode') && mod.exports.hasOwnProperty('encode')) {
+                    A.Controller.loadMod('encoder', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('accountDetailsClose')) {
+                    A.Controller.loadMod('accountDetails', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('clearHistory')) {
+                    A.Controller.loadMod('search', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('fetchDefaultRegions')) {
+                    A.Controller.loadMod('regions', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('clearBackupCodes')) {
+                    A.Controller.loadMod('backupCodes', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('categoryCollapseAll')) {
+                    A.Controller.loadMod('category', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('ext') && mod.exports.hasOwnProperty('parse') && mod.exports.hasOwnProperty('base')) {
+                    A.Controller.loadMod('twemoji', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('_globalServer') && mod.exports._globalServer === "https://sentry.io") {
+                    A.Controller.loadMod('sentryio', mod.exports, mod.i);
+                    A.clientPackages.sentryio = mod.exports;
+                }
+
+                if (mod.exports.hasOwnProperty('isJoi')) {
+                    A.Controller.loadMod('joi', mod.exports, mod.i);
+                    A.clientPackages.joi = mod.exports;
+                }
+
+                if (mod.exports.hasOwnProperty('hightlightAuto')) {
+                    A.Controller.loadMod('highlightjs', mod.exports);
+                    A.clientPackages.highlightjs = mod.exports;
+                }
+
+                if (mod.exports.hasOwnProperty('goToAndStop')) {
+                    A.Controller.loadMod('easeljs', mod.exports, mod.i);
+                    A.clientPackages.easeljs = mod.exports;
+                }
+
+                if (mod.exports.hasOwnProperty('AECMobile')) {
+                    A.Controller.loadMod('voice', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('CAN_SET_DEVICES')) {
+                    A.Controller.loadMod('devices', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('flattenAst')) {
+                    A.Controller.loadMod('ast', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('launchGame')) {
+                    A.Controller.loadMod('games', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('ensureStripeIsLoaded')) {
+                    A.Controller.loadMod('stripeLoaded', mod.exports, mod.i);
+                }
+
+                if (mod.exports.hasOwnProperty('containerDefault')
+                    && mod.exports.hasOwnProperty('arrowHolder')
+                    && mod.exports.hasOwnProperty('link400')
+                    && mod.exports.hasOwnProperty('marginBottom20')
+                    && mod.exports.hasOwnProperty('scrollbarGhost')
+                    && mod.exports.hasOwnProperty('scrollerWrap')
+                    && mod.exports.hasOwnProperty('accountDetails')
+                    && mod.exports.hasOwnProperty('buttonDisconnect')
+                    && mod.exports.hasOwnProperty('flipped')
+                    && mod.exports.hasOwnProperty('guildPanel')
+                    && mod.exports.hasOwnProperty('keybindFlipped')
+                    && mod.exports.hasOwnProperty('height24')) {
+                    Object.assign(A.Constants.Classes, mod.exports);
+                }
+
+                if (mod.exports.hasOwnProperty('KEY_UP')) {
+                    Object.assign(A.Constants.KeyCodes, mod.exports);
+                }
+
+                if (mod.exports.hasOwnProperty('food')) {
+                    A.Constants.Emoji = mod.exports;
+                }
+
+                if (mod.exports.hasOwnProperty('-5')) {
+                    Object.assign(A.Constants.ErrorCodes, mod.exports);
+                }
+
+                /*if (mod.exports && mod.exports[0] && mod.exports[0].executables) {
+                    A.Constants.Games = mod.exports;
+                }
+
+                if (mod.exports && mod.exports[0] && mod.exports[0].englishName) {
+                    A.Constants.TranslationCodes = mod.exports;
+                }*/
+
+                if (mod.exports.hasOwnProperty('languages')) {
+                    A.Controller.loadMod('language', mod.exports, mod.i);
+                }
+
+                if (mod.exports && mod.exports[0] && mod.exports[0].length === 3) {
+                    A.Constants.LoadingQuotes = mod.exports.map(q => {return {
+                        quote: q[0],
+                        username: q[1],
+                        platform: q[2]
+                    }});
+                }
+            }
+        });
+
+        A.parseDom = (dom, pdom) => {
             if(dom && dom.constructor && dom.constructor.name === "jQuery"){
                 return dom[1]
             }else if(typeof dom === 'string') return (pdom ? pdom : document).querySelector(dom); else return dom;
         }
-        window.A.listParents = e => {
+
+        A.listParents = e => {
             let list = [];
             let iterate = parent => {
                 if(parent !== null && parent.parentNode !== null){
@@ -29,7 +297,8 @@ class AFunc extends Plugin {
             iterate(e);
             return list;
         }
-        window.A.games = {
+
+        A.games = {
             getRunning: () => {
                 let games = [];
                 for (let x in JSON.parse(window.DI.localStorage.RunningGameStore).gameOverrides) {
@@ -67,6 +336,10 @@ class AFunc extends Plugin {
         window.A.Watcher.mo.disconnect();
     }
 
+    loadClientMods(fn, name = Math.random().toString()) {
+        return window.webpackJsonp([name], { [name]: fn }, [name]);
+    }
+
     get configTemplate() {
         return {
             color: 'dac372'
@@ -74,12 +347,71 @@ class AFunc extends Plugin {
     }
 }
 
+class AFDiscordController extends EventEmitter {
+    constructor() {
+        super();
+        this.mods = {};
+    }
+
+    // MAIN
+
+    loadMod(name, obj){
+        this.mods[name] = obj;
+        window.A.plugin.log(`Loaded client mod ${name.toUpperCase()}`, obj)
+    }
+
+    checkFor(mod){
+        if(!this.mods[mod]){
+            throw new Error(`${mod.toUpperCase()} mod functions aren't available as they have not been found!`)
+        }else return true;
+    }
+
+    isModLoaded(mod){
+        return this.mods[mod] !== undefined;
+    }
+
+    // CONSTANTS
+
+    get joi(){ if(this.checkFor('joi')) return this.mods.joi }
+    get twemoji(){ if(this.checkFor('twemoji')) return this.mods.twemoji }
+
+    // MOD: ZOOM
+
+    fontScaleTo(v){ if(this.checkFor('zoom2')) return this.mods.zoom2.fontScaleTo(v) }
+    zoomTo(v){ if(this.checkFor('zoom2')) return this.mods.zoom2.zoomTo(v) }
+    resetZoom(){ if(this.checkFor('zoom2')) return this.mods.zoom2.resetToDefault() }
+    get zoom(){ if(this.checkFor('zoom')) return this.mods.zoom.zoom }
+    get fontScale(){ if(this.checkFor('zoom')) return this.mods.zoom.fontScale }
+    get isFontScaledUp(){ if(this.checkFor('zoom')) return this.mods.zoom.isFontScaledUp }
+
+    // MOD: DEVICES
+
+    getDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getDevices() }
+    getVideoInputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getVideoInputDevices() }
+    getAudioInputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getAudioInputDevices() }
+    getAudioOutputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getAudioOutputDevices() }
+
+    // MOD: LANGUAGES
+
+    get languages(){ if(this.checkFor('language')) return this.mods.language.languages }
+    get locale(){ if(this.checkFor('language')) return this.mods.language.Messages }
+    get chosenLocale(){ if(this.checkFor('language')) return this.mods.language.chosenLocale }
+    get translationSiteURL(){ if(this.checkFor('language')) return this.mods.language.translationSiteURL }
+    get chosenLocaleInfo(){ if(this.checkFor('language')) return this.mods.language.getLocaleInfo() }
+    setLocale(v){ if(this.checkFor('language')) return this.mods.language.setLocale(v) }
+
+    // MOD: QWICKSWITCHER
+
+    showQwickswitcher(v){ if(this.checkFor('quickswitcher')) return this.mods.quickswitcher._actionHandlers.QUICKSWITCHER_SHOW() }
+    hideQwickswitcher(v){ if(this.checkFor('quickswitcher')) return this.mods.quickswitcher._actionHandlers.QUICKSWITCHER_HIDE() }
+}
+
 class AFWatcher extends EventEmitter {
     constructor() {
         super();
         this.mo = new MutationObserver(mrs => mrs.forEach(mr => this._checkRecord(mr)));
         this.inSettings = document.querySelectorAll(".layers").length === 2;
-        this.mo.observe(document.querySelector("[data-reactroot]"), { childList: true, subtree: true });
+        this.mo.observe(document.querySelector("#app-mount>div"), { childList: true, subtree: true });
     }
 
     _checkForOptions() {
@@ -102,12 +434,12 @@ class AFWatcher extends EventEmitter {
     _checkRecord(rec) {
         this._checkForOptions();
         this.emit('mutation', rec);
-        rec.addedNodes.forEach(n => {
+        if(rec.addedNodes) rec.addedNodes.forEach(n => {
             if(n.classList && n.classList.contains('popout')){
                 if(n.childNodes[0].classList.contains('userPopout-4pfA0d')) this.emit('userPopout', {
-                    user: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1][1].props.user : null,
-                    guild: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[1][1].props.guild : null,
-                    userId: window.DI.getReactInstance(n.childNodes[0])._currentElement.props.children[1].props.children[2][1].props.userId
+                    user: window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1] ? (window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1][1].props.user : null) : null,
+                    guild: window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1] ? (window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1][1].props.guild : null) : null,
+                    userId: window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1] ? window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[2][1].props.userId : null
                 });
                 if(n.childNodes[0].classList.contains('rtc-connection-popout')) this.emit('rtcConnection');
                 if(n.childNodes[0].classList.contains('autocomplete-popout')) this.emit('autoCompletePopout');
@@ -115,8 +447,9 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-action-filter-popout')) this.emit('auditLogsActionFilterPopout');
                 if(n.childNodes[0].classList.contains('context-menu') && !n.childNodes[0].classList.contains('afunc-dom')) this.emit('modalContextMenu');
             }else if(n.classList && n.classList.contains('modal-2LIEKY')){
-                if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode)._currentElement.props.children[0].props.user);
+                if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode).memoizedProps.children[0].props.user);
                 if(n.childNodes[0].childNodes[0].classList.contains('modal-image')) this.emit('imageModal', n.childNodes[0].childNodes[0].childNodes[0].src);
+                if(n.childNodes[0].childNodes[0].classList.contains('upload-modal')) this.emit('uploadModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('region-select-modal')) this.emit('regionSelectModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('create-guild-container')) this.emit('guildModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('quickswitcher-container')) this.emit('quickSwitcher');
@@ -128,150 +461,160 @@ class AFWatcher extends EventEmitter {
                     instance: inst,
                     element: n
                 };
-                if(inst._currentElement.props.children[1]) Object.assign(res, {
-                    channel: inst._currentElement.props.children[1].props.children[0][0].props.channel,
-                    message: inst._currentElement.props.children[1].props.children[0][0].props.message
-                })
+                if(inst.memoizedProps.children[1]) Object.assign(res, {
+                    channel: inst.memoizedProps.children[1].props.children[0][0].props.channel,
+                    message: inst.memoizedProps.children[1].props.children[0][0].props.message
+                }); else if(inst.memoizedProps.children[0] && inst.memoizedProps.children[0].props) Object.assign(res, {
+                    channel: inst.memoizedProps.children[0].props.children[0].props.channel,
+                    message: inst.memoizedProps.children[0].props.children[0].props.message
+                });
                 this.emit('messageGroup', res);
+            }else if(n.classList && n.classList.contains('message')){
+                let inst = window.DI.getReactInstance(n);
+                let res = {
+                    instance: inst,
+                    element: n
+                };
+                this.emit('message', res);
             }else if(n.classList && n.classList.contains('context-menu')){
                 let inst = window.DI.getReactInstance(n);
                 if(!inst) return;
-                if(inst._currentElement.props.children[1]
-                    && inst._currentElement.props.children[1].props.channel){
+                if(inst.memoizedProps.children[1]
+                    && inst.memoizedProps.children[1].props.channel){
                     this.emit('contextMenu', {
                         type: 'channel',
-                        guild: inst._currentElement.props.children[1].props.guild,
-                        channel: inst._currentElement.props.children[1].props.channel,
+                        guild: inst.memoizedProps.children[1].props.guild,
+                        channel: inst.memoizedProps.children[1].props.channel,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[2]
-                        && inst._currentElement.props.children[2].props.guild){
+                }else if(inst.memoizedProps.children[2]
+                        && inst.memoizedProps.children[2].props.guild){
                     this.emit('contextMenu', {
                         type: 'guild',
-                        guild: inst._currentElement.props.children[2].props.guild,
+                        guild: inst.memoizedProps.children[2].props.guild,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[3]
-                        && inst._currentElement.props.children[3].props.user){
+                }else if(inst.memoizedProps.children[3]
+                        && inst.memoizedProps.children[3].props.user){
                     this.emit('contextMenu', {
                         type: 'member',
-                        user: inst._currentElement.props.children[3].props.user,
-                        channelId: inst._currentElement.props.children[3].props.channelId,
-                        guildId: inst._currentElement.props.children[3].props.guildId,
+                        user: inst.memoizedProps.children[3].props.user,
+                        channelId: inst.memoizedProps.children[3].props.channelId,
+                        guildId: inst.memoizedProps.children[3].props.guildId,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[2]
-                        && inst._currentElement.props.children[2].props.user){
+                }else if(inst.memoizedProps.children[2]
+                        && inst.memoizedProps.children[2].props.user){
                     this.emit('contextMenu', {
                         type: 'member',
-                        user: inst._currentElement.props.children[2].props.user,
-                        channelId: inst._currentElement.props.children[2].props.channelId,
-                        guildId: inst._currentElement.props.children[2].props.guildId,
+                        user: inst.memoizedProps.children[2].props.user,
+                        channelId: inst.memoizedProps.children[2].props.channelId,
+                        guildId: inst.memoizedProps.children[2].props.guildId,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[2]
-                        && inst._currentElement.props.children[2].props.children
-                        && inst._currentElement.props.children[2].props.children[0]
-                        && inst._currentElement.props.children[2].props.children[0].props.message){
+                }else if(inst.memoizedProps.children[2]
+                        && inst.memoizedProps.children[2].props.children
+                        && inst.memoizedProps.children[2].props.children[0]
+                        && inst.memoizedProps.children[2].props.children[0].props.message){
                     this.emit('contextMenu', {
                         type: 'message',
-                        channel: inst._currentElement.props.children[2].props.children[0].props.channel,
-                        message: inst._currentElement.props.children[2].props.children[0].props.message,
+                        channel: inst.memoizedProps.children[2].props.children[0].props.channel,
+                        message: inst.memoizedProps.children[2].props.children[0].props.message,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[3]
-                        && inst._currentElement.props.children[3].props.children
-                        && inst._currentElement.props.children[3].props.children[2]
-                        && inst._currentElement.props.children[3].props.children[2].props.user){
+                }else if(inst.memoizedProps.children[3]
+                        && inst.memoizedProps.children[3].props.children
+                        && inst.memoizedProps.children[3].props.children[2]
+                        && inst.memoizedProps.children[3].props.children[2].props.user){
                     this.emit('contextMenu', {
                         type: 'groupMember',
-                        user: inst._currentElement.props.children[3].props.children[2].props.user,
-                        channelId: inst._currentElement.props.children[2].props.children.channelId,
+                        user: inst.memoizedProps.children[3].props.children[2].props.user,
+                        channelId: inst.memoizedProps.children[2].props.children.channelId,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[0]
-                        && inst._currentElement.props.children[0].props.children
-                        && inst._currentElement.props.children[0].props.children[2]
-                        && inst._currentElement.props.children[0].props.children[2].props.user){
+                }else if(inst.memoizedProps.children[0]
+                        && inst.memoizedProps.children[0].props.children
+                        && inst.memoizedProps.children[0].props.children[2]
+                        && inst.memoizedProps.children[0].props.children[2].props.user){
                     this.emit('contextMenu', {
                         type: 'dm',
-                        user: inst._currentElement.props.children[0].props.children[2].props.user,
-                        channelId: inst._currentElement.props.children[0].props.children[2].props.channelId,
+                        user: inst.memoizedProps.children[0].props.children[2].props.user,
+                        channelId: inst.memoizedProps.children[0].props.children[2].props.channelId,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[0]
-                        && inst._currentElement.props.children[0].props.children
-                        && inst._currentElement.props.children[0].props.children[1]
-                        && inst._currentElement.props.children[0].props.children[1].props.channel){
+                }else if(inst.memoizedProps.children[0]
+                        && inst.memoizedProps.children[0].props.children
+                        && inst.memoizedProps.children[0].props.children[1]
+                        && inst.memoizedProps.children[0].props.children[1].props.channel){
                     this.emit('contextMenu', {
                         type: 'group',
-                        channel: inst._currentElement.props.children[0].props.children[1].props.channel,
+                        channel: inst.memoizedProps.children[0].props.children[1].props.channel,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[1]
-                        && inst._currentElement.props.children[1].props.children
-                        && inst._currentElement.props.children[1].props.children[0]
-                        && inst._currentElement.props.children[1].props.children[0].props.user){
+                }else if(inst.memoizedProps.children[1]
+                        && inst.memoizedProps.children[1].props.children
+                        && inst.memoizedProps.children[1].props.children[0]
+                        && inst.memoizedProps.children[1].props.children[0].props.user){
                     this.emit('contextMenu', {
                         type: 'user',
-                        user: inst._currentElement.props.children[1].props.children[0].props.user,
+                        user: inst.memoizedProps.children[1].props.children[0].props.user,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children.props
-                        && inst._currentElement.props.children.props.children
-                        && inst._currentElement.props.children.props.children[0]
-                        && inst._currentElement.props.children.props.children[0].props.label
-                        && inst._currentElement.props.children.props.children[0].props.image){
+                }else if(inst.memoizedProps.children.props
+                        && inst.memoizedProps.children.props.children
+                        && inst.memoizedProps.children.props.children[0]
+                        && inst.memoizedProps.children.props.children[0].props.label
+                        && inst.memoizedProps.children.props.children[0].props.image){
                     this.emit('contextMenu', {
                         type: 'react',
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[0]
-                        && inst._currentElement.props.children[0].key
-                        && inst._currentElement.props.children[0].props.label
-                        && inst._currentElement.props.children[0].props.styles){
+                }else if(inst.memoizedProps.children[0]
+                        && inst.memoizedProps.children[0].key
+                        && inst.memoizedProps.children[0].props.label
+                        && inst.memoizedProps.children[0].props.styles){
                     this.emit('contextMenu', {
                         type: 'roles',
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children.props
-                        && inst._currentElement.props.children.props.children
-                        && inst._currentElement.props.children.props.children[0]
-                        && inst._currentElement.props.children.props.children[0].key
-                        && inst._currentElement.props.children.props.children[0].props.label){
+                }else if(inst.memoizedProps.children.props
+                        && inst.memoizedProps.children.props.children
+                        && inst.memoizedProps.children.props.children[0]
+                        && inst.memoizedProps.children.props.children[0].key
+                        && inst.memoizedProps.children.props.children[0].props.label){
                     this.emit('contextMenu', {
                         type: 'inviteServer',
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children.props
-                        && inst._currentElement.props.children.props.src){
+                }else if(inst.memoizedProps.children.props
+                        && inst.memoizedProps.children.props.src){
                     this.emit('contextMenu', {
                         type: 'image',
-                        url: inst._currentElement.props.children.props.href,
-                        proxyUrl: inst._currentElement.props.children.props.src,
+                        url: inst.memoizedProps.children.props.href,
+                        proxyUrl: inst.memoizedProps.children.props.src,
                         instance: inst,
                         element: n
                     });
-                }else if(inst._currentElement.props.children[2]
-                        && inst._currentElement.props.children[2].props.children
-                        && inst._currentElement.props.children[2].props.children.props
-                        && inst._currentElement.props.children[2].props.children.props.channel){ // system messages
+                }else if(inst.memoizedProps.children[2]
+                        && inst.memoizedProps.children[2].props.children
+                        && inst.memoizedProps.children[2].props.children.props
+                        && inst.memoizedProps.children[2].props.children.props.channel){ // system messages
                     this.emit('contextMenu', {
                         type: 'systemMessage',
-                        channel: inst._currentElement.props.children[2].props.children.props.channel,
-                        message: inst._currentElement.props.children[2].props.children.props.message,
+                        channel: inst.memoizedProps.children[2].props.children.props.channel,
+                        message: inst.memoizedProps.children[2].props.children.props.message,
                         instance: inst,
                         element: n
                     });
@@ -333,9 +676,9 @@ class AFDialog {
         let btns = nbtns;
         if(!(nbtns instanceof Array)) btns = [nbtns];
         return btns.map(btn => {
-            if(typeof btns !== 'object') return undefined;
+            if(typeof btn !== 'object' || !btn) return undefined;
             if(typeof btn.text !== 'string') throw new Error('Button text is required as a string!');
-            if(!['default','outline'].includes(btn.style)) btn.style = 'default';
+            if(!['default','outline','ghost','link','red'].includes(btn.style)) btn.style = 'default';
             if(!['string','function'].includes(typeof btn.onClick)) btn.onClick = 'close';
             if(typeof btn.onClick === 'string' && btn.onClick != 'close') throw new Error('Invalid button callback string!'); else btn.onClick = this.hide.bind(this);
             return btn;
@@ -416,6 +759,15 @@ class AFDialog {
                     }else if(btn.style === 'outline'){
                         button.className = "buttonRedOutlinedDefault-1VCgwL buttonOutlinedDefault-3FNQnZ buttonDefault-2OLW-v button-2t3of8 buttonOutlined-38aLSW buttonRedOutlined-2t9fm_ smallGrow-2_7ZaC";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsOutlined-mJF6nQ contents-4L4hQM";
+                    }else if(btn.style === 'ghost'){
+                        button.className = "buttonBrandGhostDefault-2JCnWW buttonGhostDefault-2NFSwJ buttonDefault-2OLW-v button-2t3of8 buttonGhost-2Y7zWJ buttonBrandGhost-1-Lmhc mediumGrow-uovsMu buttonSpacing-3R7DSg";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsGhost-2Yp1r8";
+                    }else if(btn.style === 'link'){
+                        button.className = "buttonPrimaryLinkDefault-1PQflF buttonLinkDefault-3J8pja buttonDefault-2OLW-v button-2t3of8 mediumGrow-uovsMu";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsLink-2ScJ_P contents-4L4hQM";
+                    }else if(btn.style === 'red'){
+                        button.className = "buttonRedFilledDefault-1TrZ9q buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonRedFilled-1NjJNj mediumGrow-uovsMu";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsFilled-3M8HCx contents-4L4hQM";
                     }
                     button.appendChild(buttonInner);
                     buttonBlock.appendChild(button);
@@ -708,11 +1060,11 @@ class AFuncClass {
     tooltip(direction, text, options){
         if(!this.dom) throw new Error('No DOM found in the class!');
         this.unbindTooltip();
-        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "brand"} ${options && options.className ? options.className : ""}` }
+        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "normal"} ${options && options.className ? options.className : ""}` }
         if(!['top','bottom','left','right'].includes(direction)) throw new Error("Invalid direction!");
         if(typeof options !== 'object') options = {style:'normal',sanitize:true};
         if(options && typeof options.sanitize !== 'boolean') options.sanitize = true;
-        if(options && options.style && !['error','success','warning','brand'].includes(options.style)) throw new Error("Invalid style!");
+        if(options && options.style && !['error','success','warning','normal'].includes(options.style)) throw new Error("Invalid style!");
         this.dom._afuncProperties.tooltip_mw = ()=>{
             let tt = this.dom._afuncProperties.tooltip;
             if(!this.dom._afuncProperties.tooltip_up) return;
