@@ -31,6 +31,8 @@ class AFunc extends Plugin {
                 let mod = r.c[key];
                 A.clientMods.push(mod);
 
+                if(!mod.exports) return;
+
                 if (mod.exports.hasOwnProperty('A11Y_NITRO_BADGE')) {
                     A.Constants.Translations.push(mod.exports);
                 }
@@ -411,7 +413,7 @@ class AFWatcher extends EventEmitter {
         super();
         this.mo = new MutationObserver(mrs => mrs.forEach(mr => this._checkRecord(mr)));
         this.inSettings = document.querySelectorAll(".layers").length === 2;
-        this.mo.observe(document.querySelector("#app-mount>div"), { childList: true, subtree: true });
+        this.mo.observe(document.querySelector(".app-XZYfmp"), { childList: true, subtree: true });
     }
 
     _checkForOptions() {
