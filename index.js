@@ -16,6 +16,7 @@ class AFunc extends Plugin {
         A.dialog = AFDialog;
         A.contextMenu = AFContextMenu;
         A.class = AFuncClass;
+        A.channelNotices = AFChannelNotices;
         A.clientMods = [];
         A.clientTranslations = [];
         A.clientPackages = [];
@@ -359,7 +360,7 @@ class AFDiscordController extends EventEmitter {
 
     loadMod(name, obj){
         this.mods[name] = obj;
-        window.A.plugin.log(`Loaded client mod ${name.toUpperCase()}`, obj)
+        //window.A.plugin.log(`Loaded client mod ${name.toUpperCase()}`, obj)
     }
 
     checkFor(mod){
@@ -636,6 +637,85 @@ class AFWatcher extends EventEmitter {
     }
 }
 
+class AFChannelNotices {
+    constructor(options) {
+        options = Object.assign({
+            image: "https://raw.githubusercontent.com/Snazzah/DiscordInjections-Chrome/master/src/img/transparentIcon.png",
+            message: null,
+            buttons: null
+        }, options);
+        if(typeof options !== 'object') throw new Error('Options is required as an object!');
+        if(![typeof options.message === 'string', options.message instanceof HTMLElement, options.message instanceof Array].includes(true)) throw new Error('Content is required as either a string, element or an array of elements!');
+        if(typeof options.sanitize !== 'boolean') options.sanitize = true;
+        options.buttons = this._parseButtons(options.buttons);
+        this.options = options;
+    }
+
+    _parseButtons(nbtns){
+        let btns = nbtns;
+        if(!(nbtns instanceof Array)) btns = [nbtns];
+        return btns.map(btn => {
+            if(typeof btn !== 'object' || !btn) return undefined;
+            if(typeof btn.text !== 'string') throw new Error('Button text is required as a string!');
+            if(typeof btn.onClick === 'string' && btn.onClick != 'close') throw new Error('Invalid button callback string!'); else btn.onClick = this.hide.bind(this);
+            return btn;
+        }).filter(b => typeof b !== 'undefined');
+    }
+
+    static get insertBeforeElement() {
+        return document.querySelector(".channels-3g2vYe>.container-RYiLUQ>.flexChild-1KGW5q,.private-channels>.scrollerWrap-2uBjct");
+    }
+
+    static get parentWrapper() {
+        return document.querySelector(".channels-3g2vYe>.container-RYiLUQ,.private-channels");
+    }
+
+    static get container() {
+        let modal = document.createElement('div');
+        modal.className = "afunc-dom channel-notices";
+        let inner = document.createElement('div');
+        inner.className = "channel-notice quickswitcher-notice";
+        modal.appendChild(inner);
+        return inner;
+    }
+
+    _san(text){ return this.options.sanitize ? window.DI.Helpers.sanitize(text) : text; }
+
+    show(){
+        let container = AFChannelNotices.container;
+        if(this.options.image) container.style = `background-image: url(${this.options.image});`;
+        let closeBtn = document.createElement('div');
+        closeBtn.className = "close";
+        container.appendChild(closeBtn);
+        closeBtn.onclick = this.hide.bind(this);
+
+        let messageCont = document.createElement('div');
+        messageCont.className = "message";
+        container.appendChild(messageCont);
+
+        if(typeof this.options.message === 'string'){
+            let message = document.createElement('div');
+            message.innerHTML = this._san(this.options.message);
+            messageCont.appendChild(message);
+        }else if(this.options.message instanceof HTMLElement){
+            messageCont.appendChild(this.options.message);
+        }else{
+            this.options.message.map(e => messageCont.appendChild(e));
+        }
+
+        this.modal = container.parentNode;
+        AFChannelNotices.parentWrapper.insertBefore(container.parentNode, AFChannelNotices.insertBeforeElement);
+        return container.parentNode;
+    }
+
+    hide(){
+        if(!this.modal) return;
+        let modal = this.modal;
+        this.modal = null;
+        AFChannelNotices.parentWrapper.removeChild(modal);
+    }
+}
+
 class AFDialog {
     constructor(type, options) {
         if(!['default'].includes(type)) type = 'default';
@@ -669,7 +749,7 @@ class AFDialog {
     }
 
     static get modalWrapper() {
-        return document.querySelector('.nux-highlights+div+div');
+        return document.querySelector('.app+[class^="theme-"]');
     }
 
     _san(text){ return this.options.sanitize ? window.DI.Helpers.sanitize(text) : text; }
@@ -804,7 +884,7 @@ class AFContextMenu extends EventEmitter {
     }
 
     static get contextWrapper() {
-        return document.querySelector('.nux-highlights+div');
+        return document.querySelector('.app');
     }
 
     static fromArray(items) {
