@@ -418,7 +418,7 @@ class AFWatcher extends EventEmitter {
     }
 
     _checkForOptions() {
-        if((document.querySelector(".app>*:first-child").childNodes.length === 2) !== this.inSettings){
+        if((document.querySelectorAll(".layers").length === 2) !== this.inSettings){
             if(this.inSettings){
                 this.emit('settingsExit');
                 this.settingsType = null;
