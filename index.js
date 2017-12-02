@@ -17,6 +17,7 @@ class AFunc extends Plugin {
         A.contextMenu = AFContextMenu;
         A.class = AFuncClass;
         A.channelNotices = AFChannelNotices;
+        A.contextValidator = AFContextValidator;
         A.clientMods = [];
         A.clientTranslations = [];
         A.clientPackages = [];
@@ -389,10 +390,10 @@ class AFDiscordController extends EventEmitter {
 
     // MOD: DEVICES
 
-    getDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getDevices() }
-    getVideoInputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getVideoInputDevices() }
-    getAudioInputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getAudioInputDevices() }
-    getAudioOutputDevices(v){ if(this.checkFor('devices')) return this.mods.devices.getAudioOutputDevices() }
+    getDevices(){ if(this.checkFor('devices')) return this.mods.devices.getDevices() }
+    getVideoInputDevices(){ if(this.checkFor('devices')) return this.mods.devices.getVideoInputDevices() }
+    getAudioInputDevices(){ if(this.checkFor('devices')) return this.mods.devices.getAudioInputDevices() }
+    getAudioOutputDevices(){ if(this.checkFor('devices')) return this.mods.devices.getAudioOutputDevices() }
 
     // MOD: LANGUAGES
 
@@ -407,6 +408,24 @@ class AFDiscordController extends EventEmitter {
 
     showQwickswitcher(v){ if(this.checkFor('quickswitcher')) return this.mods.quickswitcher._actionHandlers.QUICKSWITCHER_SHOW() }
     hideQwickswitcher(v){ if(this.checkFor('quickswitcher')) return this.mods.quickswitcher._actionHandlers.QUICKSWITCHER_HIDE() }
+}
+
+class AFContextValidator {
+    constructor(ctx) { this.ctx = ctx; }
+
+    check(string){
+        eval(this._ctxApplyString);
+        try{
+            eval(string);
+            return true;
+        }catch(e){
+            return false;
+        }
+    }
+
+    switchCtx(m) { this.ctx = m; }
+
+    get _ctxApplyString(){ return Object.keys(this.ctx).map(k => `let ${k} = this.${k};`).join(''); }
 }
 
 class AFWatcher extends EventEmitter {
@@ -438,6 +457,7 @@ class AFWatcher extends EventEmitter {
         this._checkForOptions();
         this.emit('mutation', rec);
         if(rec.addedNodes) rec.addedNodes.forEach(n => {
+            let cv = new AFContextValidator({n});
             if(n.classList && n.classList.contains('popout')){
                 if(n.childNodes[0].classList.contains('userPopout-4pfA0d')) this.emit('userPopout', {
                     user: window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1] ? (window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1] ? window.DI.getReactInstance(n.childNodes[0]).memoizedProps.children[1].props.children[1][1].props.user : null) : null,
@@ -450,7 +470,8 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].classList.contains('guild-settings-audit-logs-action-filter-popout')) this.emit('auditLogsActionFilterPopout');
                 if(n.childNodes[0].classList.contains('context-menu') && !n.childNodes[0].classList.contains('afunc-dom')) this.emit('modalContextMenu');
             }else if(n.classList && n.classList.contains('modal-2LIEKY')){
-                if(n.childNodes[0].childNodes[0].id === 'user-profile-modal') this.emit('userModal', window.DI.getReactInstance(n.querySelector('.discord-tag').parentNode).memoizedProps.children[0].props.user);
+                if(cv.check("window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props.mutualGuilds")) this.emit('userModal', window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props.user, window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props);
+                if(cv.check("window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props.children[1].props.children.props.jumpTargetIndex")) this.emit('deleteMessageModal', window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props.user, window.DI.getReactInstance(n.childNodes[0].childNodes[0]).memoizedProps.children.props);
                 if(n.childNodes[0].childNodes[0].classList.contains('modal-image')) this.emit('imageModal', n.childNodes[0].childNodes[0].childNodes[0].src);
                 if(n.childNodes[0].childNodes[0].classList.contains('upload-modal')) this.emit('uploadModal');
                 if(n.childNodes[0].childNodes[0].classList.contains('region-select-modal')) this.emit('regionSelectModal');
@@ -460,6 +481,7 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[0][0].value);
             }else if(n.classList && n.classList.contains('message-group')){
                 let inst = window.DI.getReactInstance(n);
+                cv.switchCtx({n,inst});
                 let res = {
                     instance: inst,
                     element: n
@@ -482,8 +504,7 @@ class AFWatcher extends EventEmitter {
             }else if(n.classList && n.classList.contains('context-menu')){
                 let inst = window.DI.getReactInstance(n);
                 if(!inst) return;
-                if(inst.memoizedProps.children[1]
-                    && inst.memoizedProps.children[1].props.channel){
+                if(cv.check("inst.memoizedProps.children[1].props.channel")){
                     this.emit('contextMenu', {
                         type: 'channel',
                         guild: inst.memoizedProps.children[1].props.guild,
@@ -491,16 +512,14 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[2]
-                        && inst.memoizedProps.children[2].props.guild){
+                }else if(cv.check("inst.memoizedProps.children[2].props.guild")){
                     this.emit('contextMenu', {
                         type: 'guild',
                         guild: inst.memoizedProps.children[2].props.guild,
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[3]
-                        && inst.memoizedProps.children[3].props.user){
+                }else if(cv.check("inst.memoizedProps.children[3].props.user")){
                     this.emit('contextMenu', {
                         type: 'member',
                         user: inst.memoizedProps.children[3].props.user,
@@ -509,8 +528,7 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[2]
-                        && inst.memoizedProps.children[2].props.user){
+                }else if(cv.check("inst.memoizedProps.children[2].props.user")){
                     this.emit('contextMenu', {
                         type: 'member',
                         user: inst.memoizedProps.children[2].props.user,
@@ -519,10 +537,7 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[2]
-                        && inst.memoizedProps.children[2].props.children
-                        && inst.memoizedProps.children[2].props.children[0]
-                        && inst.memoizedProps.children[2].props.children[0].props.message){
+                }else if(cv.check("inst.memoizedProps.children[2].props.children[0].props.message")){
                     this.emit('contextMenu', {
                         type: 'message',
                         channel: inst.memoizedProps.children[2].props.children[0].props.channel,
@@ -530,10 +545,7 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[3]
-                        && inst.memoizedProps.children[3].props.children
-                        && inst.memoizedProps.children[3].props.children[2]
-                        && inst.memoizedProps.children[3].props.children[2].props.user){
+                }else if(cv.check("inst.memoizedProps.children[3].props.children[2].props.user")){
                     this.emit('contextMenu', {
                         type: 'groupMember',
                         user: inst.memoizedProps.children[3].props.children[2].props.user,
@@ -541,10 +553,7 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[0]
-                        && inst.memoizedProps.children[0].props.children
-                        && inst.memoizedProps.children[0].props.children[2]
-                        && inst.memoizedProps.children[0].props.children[2].props.user){
+                }else if(cv.check("inst.memoizedProps.children[0].props.children[2].props.user")){
                     this.emit('contextMenu', {
                         type: 'dm',
                         user: inst.memoizedProps.children[0].props.children[2].props.user,
@@ -552,57 +561,39 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[0]
-                        && inst.memoizedProps.children[0].props.children
-                        && inst.memoizedProps.children[0].props.children[1]
-                        && inst.memoizedProps.children[0].props.children[1].props.channel){
+                }else if(cv.check("inst.memoizedProps.children[0].props.children[1].props.channel")){
                     this.emit('contextMenu', {
                         type: 'group',
                         channel: inst.memoizedProps.children[0].props.children[1].props.channel,
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[1]
-                        && inst.memoizedProps.children[1].props.children
-                        && inst.memoizedProps.children[1].props.children[0]
-                        && inst.memoizedProps.children[1].props.children[0].props.user){
+                }else if(cv.check("inst.memoizedProps.children[1].props.children[0].props.user")){
                     this.emit('contextMenu', {
                         type: 'user',
                         user: inst.memoizedProps.children[1].props.children[0].props.user,
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children.props
-                        && inst.memoizedProps.children.props.children
-                        && inst.memoizedProps.children.props.children[0]
-                        && inst.memoizedProps.children.props.children[0].props.label
-                        && inst.memoizedProps.children.props.children[0].props.image){
+                }else if(cv.check("inst.memoizedProps.children.props.children[0].props.image")){
                     this.emit('contextMenu', {
                         type: 'react',
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[0]
-                        && inst.memoizedProps.children[0].key
-                        && inst.memoizedProps.children[0].props.label
-                        && inst.memoizedProps.children[0].props.styles){
+                }else if(cv.check("inst.memoizedProps.children[0].props.styles")){
                     this.emit('contextMenu', {
                         type: 'roles',
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children.props
-                        && inst.memoizedProps.children.props.children
-                        && inst.memoizedProps.children.props.children[0]
-                        && inst.memoizedProps.children.props.children[0].key
-                        && inst.memoizedProps.children.props.children[0].props.label){
+                }else if(cv.check("inst.memoizedProps.children.props.children[0].props.label")){
                     this.emit('contextMenu', {
                         type: 'inviteServer',
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children.props
-                        && inst.memoizedProps.children.props.src){
+                }else if(cv.check("inst.memoizedProps.children.props.src")){
                     this.emit('contextMenu', {
                         type: 'image',
                         url: inst.memoizedProps.children.props.href,
@@ -610,10 +601,7 @@ class AFWatcher extends EventEmitter {
                         instance: inst,
                         element: n
                     });
-                }else if(inst.memoizedProps.children[2]
-                        && inst.memoizedProps.children[2].props.children
-                        && inst.memoizedProps.children[2].props.children.props
-                        && inst.memoizedProps.children[2].props.children.props.channel){ // system messages
+                }else if(cv.check("inst.memoizedProps.children[2].props.children.props.channel")){ // system messages
                     this.emit('contextMenu', {
                         type: 'systemMessage',
                         channel: inst.memoizedProps.children[2].props.children.props.channel,
@@ -731,7 +719,7 @@ class AFDialog {
 
     static get calloutBackdrop() {
         let calloutBackdrop = document.createElement('div');
-        calloutBackdrop.className = "afunc-dom callout-backdrop";
+        calloutBackdrop.className = "afunc-dom backdrop-2ohBEd";
         return calloutBackdrop;
     }
 
@@ -836,19 +824,22 @@ class AFDialog {
                     let buttonInner = document.createElement('div');
                     buttonInner.innerHTML = window.DI.Helpers.sanitize(btn.text);
                     if(btn.style === 'default'){
-                        button.className = "buttonBrandFilledDefault-2Rs6u5 buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonBrandFilled-3Mv0Ra mediumGrow-uovsMu";
+                        button.className = "buttonBrandFilledDefault-2Rs6u5 buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonBrandFilled-3Mv0Ra mediumGrow-uovsMu buttonSpacing-3R7DSg";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsFilled-3M8HCx contents-4L4hQM";
                     }else if(btn.style === 'outline'){
-                        button.className = "buttonRedOutlinedDefault-1VCgwL buttonOutlinedDefault-3FNQnZ buttonDefault-2OLW-v button-2t3of8 buttonOutlined-38aLSW buttonRedOutlined-2t9fm_ smallGrow-2_7ZaC";
+                        button.className = "buttonRedOutlinedDefault-1VCgwL buttonOutlinedDefault-3FNQnZ buttonDefault-2OLW-v button-2t3of8 buttonOutlined-38aLSW buttonRedOutlined-2t9fm_ smallGrow-2_7ZaC buttonSpacing-3R7DSg";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsOutlined-mJF6nQ contents-4L4hQM";
                     }else if(btn.style === 'ghost'){
                         button.className = "buttonBrandGhostDefault-2JCnWW buttonGhostDefault-2NFSwJ buttonDefault-2OLW-v button-2t3of8 buttonGhost-2Y7zWJ buttonBrandGhost-1-Lmhc mediumGrow-uovsMu buttonSpacing-3R7DSg";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsGhost-2Yp1r8";
                     }else if(btn.style === 'link'){
-                        button.className = "buttonPrimaryLinkDefault-1PQflF buttonLinkDefault-3J8pja buttonDefault-2OLW-v button-2t3of8 mediumGrow-uovsMu";
+                        button.className = "buttonPrimaryLinkDefault-1PQflF buttonLinkDefault-3J8pja buttonDefault-2OLW-v button-2t3of8 mediumGrow-uovsMu buttonSpacing-3R7DSg";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsLink-2ScJ_P contents-4L4hQM";
                     }else if(btn.style === 'red'){
-                        button.className = "buttonRedFilledDefault-1TrZ9q buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonRedFilled-1NjJNj mediumGrow-uovsMu";
+                        button.className = "buttonRedFilledDefault-1TrZ9q buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonRedFilled-1NjJNj mediumGrow-uovsMu buttonSpacing-3R7DSg";
+                        buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsFilled-3M8HCx contents-4L4hQM";
+                    }else if(btn.style === 'green'){
+                        button.className = "buttonGreenFilledDefault-_lLQaz buttonFilledDefault-AELjWf buttonDefault-2OLW-v button-2t3of8 buttonFilled-29g7b5 buttonGreenFilled-6QHNrw mediumGrow-uovsMu";
                         buttonInner.className = "contentsDefault-nt2Ym5 contents-4L4hQM contentsFilled-3M8HCx contents-4L4hQM";
                     }
                     button.appendChild(buttonInner);
