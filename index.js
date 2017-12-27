@@ -414,9 +414,8 @@ class AFContextValidator {
     constructor(ctx) { this.ctx = ctx; }
 
     check(string){
-        eval(this._ctxApplyString);
         try{
-            eval(string);
+            eval(this._ctxApplyString+string);
             return true;
         }catch(e){
             return false;
@@ -425,7 +424,7 @@ class AFContextValidator {
 
     switchCtx(m) { this.ctx = m; }
 
-    get _ctxApplyString(){ return Object.keys(this.ctx).map(k => `let ${k} = this.${k};`).join(''); }
+    get _ctxApplyString(){ return Object.keys(this.ctx).map(k => `let ${k} = this.ctx.${k};`).join(''); }
 }
 
 class AFWatcher extends EventEmitter {
@@ -481,7 +480,6 @@ class AFWatcher extends EventEmitter {
                 if(n.childNodes[0].childNodes[0].classList.contains('instant-invite-modal')) this.emit('inviteModal', n.childNodes[0].childNodes[0].childNodes[0][0].value);
             }else if(n.classList && n.classList.contains('message-group')){
                 let inst = window.DI.getReactInstance(n);
-                cv.switchCtx({n,inst});
                 let res = {
                     instance: inst,
                     element: n
@@ -504,124 +502,95 @@ class AFWatcher extends EventEmitter {
             }else if(n.classList && n.classList.contains('context-menu')){
                 let inst = window.DI.getReactInstance(n);
                 if(!inst) return;
-                if(cv.check("inst.memoizedProps.children[1].props.channel")){
-                    this.emit('contextMenu', {
-                        type: 'channel',
+                cv.switchCtx({inst, e(p){ if(!p) throw new Error(); }});
+                let sendResult = (eventType, obj = {}) => {
+                    let res = {
+                        instance: inst,
+                        element: n,
+                        invertX: n.classList.contains('invertX'),
+                        invertY: n.classList.contains('invertY'),
+                        type: eventType
+                    };
+                    Object.assign(res, obj);
+                    this.emit('contextMenu', res);
+                }
+                if(cv.check("e(inst.memoizedProps.children[1].props.channel)")){
+                    sendResult('channel', {
                         guild: inst.memoizedProps.children[1].props.guild,
-                        channel: inst.memoizedProps.children[1].props.channel,
-                        instance: inst,
-                        element: n
+                        channel: inst.memoizedProps.children[1].props.channel
                     });
-                }else if(cv.check("inst.memoizedProps.children[2].props.guild")){
-                    this.emit('contextMenu', {
-                        type: 'guild',
-                        guild: inst.memoizedProps.children[2].props.guild,
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children[2].props.guild)")){
+                    sendResult('guild', {
+                        guild: inst.memoizedProps.children[2].props.guild
                     });
-                }else if(cv.check("inst.memoizedProps.children[3].props.user")){
-                    this.emit('contextMenu', {
-                        type: 'member',
+                }else if(cv.check("e(inst.memoizedProps.children[3].props.user)")){
+                    sendResult('member', {
                         user: inst.memoizedProps.children[3].props.user,
                         channelId: inst.memoizedProps.children[3].props.channelId,
-                        guildId: inst.memoizedProps.children[3].props.guildId,
-                        instance: inst,
-                        element: n
+                        guildId: inst.memoizedProps.children[3].props.guildId
                     });
-                }else if(cv.check("inst.memoizedProps.children[2].props.user")){
-                    this.emit('contextMenu', {
-                        type: 'member',
+                }else if(cv.check("e(inst.memoizedProps.children[2].props.user)")){
+                    sendResult('member', {
                         user: inst.memoizedProps.children[2].props.user,
                         channelId: inst.memoizedProps.children[2].props.channelId,
-                        guildId: inst.memoizedProps.children[2].props.guildId,
-                        instance: inst,
-                        element: n
+                        guildId: inst.memoizedProps.children[2].props.guildId
                     });
-                }else if(cv.check("inst.memoizedProps.children[2].props.children[0].props.message")){
-                    this.emit('contextMenu', {
-                        type: 'message',
+                }else if(cv.check("e(inst.memoizedProps.children[2].props.children[0].props.message)")){
+                    sendResult('message', {
                         channel: inst.memoizedProps.children[2].props.children[0].props.channel,
-                        message: inst.memoizedProps.children[2].props.children[0].props.message,
-                        instance: inst,
-                        element: n
+                        message: inst.memoizedProps.children[2].props.children[0].props.message
                     });
-                }else if(cv.check("inst.memoizedProps.children[3].props.children[2].props.user")){
-                    this.emit('contextMenu', {
-                        type: 'groupMember',
+                }else if(cv.check("e(inst.memoizedProps.children[3].props.children[2].props.user)")){
+                    sendResult('groupMember', {
                         user: inst.memoizedProps.children[3].props.children[2].props.user,
-                        channelId: inst.memoizedProps.children[2].props.children.channelId,
-                        instance: inst,
-                        element: n
+                        channelId: inst.memoizedProps.children[2].props.children.channelId
                     });
-                }else if(cv.check("inst.memoizedProps.children[0].props.children[2].props.user")){
-                    this.emit('contextMenu', {
-                        type: 'dm',
+                }else if(cv.check("e(inst.memoizedProps.children[0].props.children[2].props.user)")){
+                    sendResult('dm', {
                         user: inst.memoizedProps.children[0].props.children[2].props.user,
-                        channelId: inst.memoizedProps.children[0].props.children[2].props.channelId,
-                        instance: inst,
-                        element: n
+                        channelId: inst.memoizedProps.children[0].props.children[2].props.channelId
                     });
-                }else if(cv.check("inst.memoizedProps.children[0].props.children[1].props.channel")){
-                    this.emit('contextMenu', {
-                        type: 'group',
-                        channel: inst.memoizedProps.children[0].props.children[1].props.channel,
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children[0].props.children[1].props.channel)")){
+                    sendResult('group', {
+                        channel: inst.memoizedProps.children[0].props.children[1].props.channel
                     });
-                }else if(cv.check("inst.memoizedProps.children[1].props.children[0].props.user")){
-                    this.emit('contextMenu', {
-                        type: 'user',
-                        user: inst.memoizedProps.children[1].props.children[0].props.user,
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children[1].props.children[0].props.user)")){
+                    sendResult('user', {
+                        user: inst.memoizedProps.children[1].props.children[0].props.user
                     });
-                }else if(cv.check("inst.memoizedProps.children.props.children[0].props.image")){
-                    this.emit('contextMenu', {
-                        type: 'react',
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children.props.children[0].props.image)")){
+                    sendResult('react');
+                }else if(cv.check("e(inst.memoizedProps.children[0].props.styles)")){
+                    sendResult('roles');
+                }else if(cv.check("e(parseInt(inst.memoizedProps.children.props.children[0].key))")){
+                    sendResult('inviteServer', {
+                        servers: inst.memoizedProps.children.props.children.map(s => ({ id: s.key, name: s.props.label }))
                     });
-                }else if(cv.check("inst.memoizedProps.children[0].props.styles")){
-                    this.emit('contextMenu', {
-                        type: 'roles',
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children.props.children[0].props.label)")){
+                    sendResult('serverSettings', {
+                        availableActions: inst.memoizedProps.children.props.children.map(a => a.key)
                     });
-                }else if(cv.check("inst.memoizedProps.children.props.children[0].props.label")){
-                    this.emit('contextMenu', {
-                        type: 'inviteServer',
-                        instance: inst,
-                        element: n
+                }else if(cv.check("e(inst.memoizedProps.children[0].props.label)")){
+                    sendResult('serverSettings', {
+                        availableActions: inst.memoizedProps.children.map(a => a.key)
                     });
-                }else if(cv.check("inst.memoizedProps.children.props.src")){
-                    this.emit('contextMenu', {
-                        type: 'image',
+                }else if(cv.check("e(inst.memoizedProps.children.props.src)")){
+                    sendResult('image', {
                         url: inst.memoizedProps.children.props.href,
-                        proxyUrl: inst.memoizedProps.children.props.src,
-                        instance: inst,
-                        element: n
+                        proxyUrl: inst.memoizedProps.children.props.src
                     });
-                }else if(cv.check("inst.memoizedProps.children[2].props.children.props.channel")){ // system messages
-                    this.emit('contextMenu', {
-                        type: 'systemMessage',
+                }else if(cv.check("e(inst.memoizedProps.children[2].props.children.props.channel)")){ // system messages
+                    sendResult('systemMessage', {
                         channel: inst.memoizedProps.children[2].props.children.props.channel,
-                        message: inst.memoizedProps.children[2].props.children.props.message,
-                        instance: inst,
-                        element: n
+                        message: inst.memoizedProps.children[2].props.children.props.message
                     });
-                }else{
-                    this.emit('contextMenu', {
-                        type: 'unknown',
-                        instance: inst,
-                        element: n
-                    });
-                }
+                }else sendResult('unknown');
             }
         });
     }
 
     log(...args) {
-        console.log(`%c[AFunc] %c[MutationObserver]`, `color: #dac372; font-weight: bold;`, `font-weight: bold;`, ...args);
+        console.log(`%c[AFunc%c.Watcher%c]`, `color: #dac372; font-weight: bold;`, ``, `color: #dac372; font-weight: bold;`, ...args);
     }
 }
 
@@ -1133,11 +1102,11 @@ class AFuncClass {
     tooltip(direction, text, options){
         if(!this.dom) throw new Error('No DOM found in the class!');
         this.unbindTooltip();
-        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "normal"} ${options && options.className ? options.className : ""}` }
+        function getClassName(dir){ return `tooltip tooltip-${dir} tooltip-${options && options.style ? options.style : "black"} ${options && options.className ? options.className : ""}` }
         if(!['top','bottom','left','right'].includes(direction)) throw new Error("Invalid direction!");
-        if(typeof options !== 'object') options = {style:'normal',sanitize:true};
+        if(typeof options !== 'object') options = {style:'black',sanitize:true};
         if(options && typeof options.sanitize !== 'boolean') options.sanitize = true;
-        if(options && options.style && !['error','success','warning','normal'].includes(options.style)) throw new Error("Invalid style!");
+        if(options && options.style && !['error','success','warning','black'].includes(options.style)) throw new Error("Invalid style!");
         this.dom._afuncProperties.tooltip_mw = ()=>{
             let tt = this.dom._afuncProperties.tooltip;
             if(!this.dom._afuncProperties.tooltip_up) return;
