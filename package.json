@@ -1,6 +1,6 @@
 {
   "name": "AFunc",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Replicate methods and listen to actions in Discord.",
   "main": "index.js",
   "scripts": {
