@@ -1,11 +1,18 @@
 {
-  "name": "AFunc",
-  "version": "2.0.0",
-  "description": "Replicate methods and listen to actions in Discord.",
+  "name": "afunc",
+  "version": "3.0.0",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "Snazzah",
-  "license": "MIT"
+  "description": "Replicate methods and listen to actions in Discord.",
+  "license": "MIT",
+  "peerDependencies": { "elements": "*" },
+  "keywords": ["di-plugin"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SnazzahDI/FakeConnections.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SnazzahDI/FakeConnections/issues"
+  },
+  "css": ["afunc.css"]
 }
