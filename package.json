@@ -9,10 +9,10 @@
   "keywords": ["di-plugin"],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SnazzahDI/FakeConnections.git"
+    "url": "git+https://github.com/SnazzahDI/AFunc.git"
   },
   "bugs": {
-    "url": "https://github.com/SnazzahDI/FakeConnections/issues"
+    "url": "https://github.com/SnazzahDI/AFunc/issues"
   },
   "css": ["afunc.css"]
 }
