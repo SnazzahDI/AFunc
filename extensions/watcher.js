@@ -11,7 +11,7 @@ module.exports = class Watcher extends EventEmitter {
     this.DI = afunc.DI;
     this.inSettings = document.querySelectorAll(".layers").length === 2;
     this.mBind = mrs => mrs.forEach(mr => this._checkRecord(mr));
-    const r = (this.react = afunc.DI.plugins.get('react'));
+    const r = (this.react = afunc.manager.get('react'));
     r.on('mutation', this.mBind);
   }
 

@@ -6,12 +6,15 @@ module.exports = afunc => {
     constructor() {
       super();
       this.mods = {};
-      this.react = afunc.DI.plugins.get('react');
+    }
+
+    webPackLoad(fn, name = Math.random().toString()) {
+        return window.webpackJsonp([name], { [name]: fn }, [name]);
     }
 
     _start(){
       let cv = new ContextValidator();
-      this.react.webPackLoad((m, e, r) => {
+      this.webPackLoad((m, e, r) => {
         for (const key in r.c) {
           const mod = r.c[key];
           afunc.clientMods.push(mod);
